@@ -1,12 +1,13 @@
-import React, { createContext, useState, useEffect, ReactNode } from "react";
-import { supabase } from "../api/supabaseClient";
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { supabase } from '../api/supabaseClient';
+import { signUpWithProfile } from '../api/authService';
 
 type User = any; // Replace with Supabase types if needed
 
 interface AuthContextProps {
     user: User | null;
     loading: boolean;
-    signUp: (email: string, password: string) => Promise<void>;
+    signUp: (email: string, password: string, firstName: string, lastName: string) => Promise<void>;
     signIn: (email: string, password: string) => Promise<void>;
     signOut: () => Promise<void>;
 }
@@ -45,44 +46,51 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         };
     }, []);
 
-    const signUp = async (email: string, password: string) => {
+    const signUp = async (email: string, password: string, firstName: string, lastName: string) => {
         setLoading(true);
-        const { data, error } = await supabase.auth.signUp({ email, password });
-
-        if (error) {
+        try {
+            const user = await signUpWithProfile(email, password, firstName, lastName);
+            setUser(user);
+        } catch (err) {
+            throw err;
+        } finally {
             setLoading(false);
-            throw error;
         }
-
-        // Supabase may require email verification — don't force user into session
-        setUser(data.user ?? null);
-        setLoading(false);
     };
 
     const signIn = async (email: string, password: string) => {
         setLoading(true);
-        const { data, error } = await supabase.auth.signInWithPassword({ email, password, });
+        try {
+            const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+            console.log("signIn2___DATA", user);
 
-        if (error) {
+            if (error) {
+                if (error.code === 'email_not_confirmed') {
+                    throw new Error('Please confirm your email before logging in.');
+                }
+                throw error;
+            }
+            setUser(data.user);
+
+        } catch (err) {
+            console.log("signIn2___catch_ERROR", err);
+
+            throw err;
+        } finally {
             setLoading(false);
-            throw error;
         }
-
-        setUser(data.user);
-        setLoading(false);
     };
 
     const signOut = async () => {
         setLoading(true);
-        const { error } = await supabase.auth.signOut();
-
-        if (error) {
+        try {
+            await supabase.auth.signOut();
+            setUser(null);
+        } catch (err) {
+            throw err;
+        } finally {
             setLoading(false);
-            throw error;
         }
-
-        setUser(null);
-        setLoading(false);
     };
 
     return (

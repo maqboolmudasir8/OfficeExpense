@@ -74,7 +74,8 @@ export default function LoginScreen({ navigation }: Props) {
                         contentStyle={{ paddingVertical: 6 }}
                         loading={loading}
                         disabled={loading}
-                        icon={() => <Icon name="login" size={20} color="#fff" />}
+                        buttonColor={theme.colors.primary} // Set proper background
+                        icon="login" // Pass icon name as string (Paper will use your Paper icon set)
                     >
                         Login
                     </Button>
