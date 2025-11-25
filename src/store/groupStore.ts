@@ -1,80 +1,130 @@
 import { create } from "zustand";
-import { ExpenseGroup, GroupMember, PermissionLevel } from "../types/ExpenseGroup";
-import { expenseGroupService } from "../api/expenseGroupService";
-import { expenseGroupMemberService } from "../api/expenseGroupMemberService";
-import { supabase } from "../api/supabaseClient";
+import { groupService } from "../api/folderService";
+import { memberService } from "../api/expenseGroupMemberService";
 
-type GroupStore = {
-    groups: ExpenseGroup[];
-    selectedGroup: ExpenseGroup | null;
-    members: GroupMember[];
-    loading: boolean;
+interface GroupStore {
+    groups: any[];
+    selectedGroup: any | null;
+    isLoading: boolean;
+    error: string | null;
+
+    resetError: () => void;
 
     fetchGroups: () => Promise<void>;
+    fetchGroupsByUserId: (userId: string) => Promise<void>;
     fetchGroupDetails: (groupId: number) => Promise<void>;
-    createGroup: (data: { name: string; description?: string; visibility: string }) => Promise<void>;
-    addMember: (groupId: number, email: string, permissionLevel: PermissionLevel) => Promise<void>;
-    deleteGroup: (groupId: number) => Promise<void>;
-};
+    createGroup: (payload: any) => Promise<any>;
+    updateGroup: (id: number, updates: any) => Promise<any>;
+    deleteGroup: (id: number) => Promise<boolean>;
+    addMember: (groupId: number, email: string, permission: any) => Promise<void>;
+}
 
-export const useGroupStore = create<GroupStore>((set) => ({
+export const useGroupStore = create<GroupStore>((set, get) => ({
     groups: [],
     selectedGroup: null,
-    members: [],
-    loading: false,
+    isLoading: false,
+    error: null,
 
-    fetchGroups: async () => {
-        set({ loading: true });
-        const groups = await expenseGroupService.getAll();
-        set({ groups, loading: false });
+    resetError: () => set({ error: null }),
+
+    async fetchGroups() {
+        set({ isLoading: true });
+        try {
+            const groups = await groupService.fetchGroups();
+            set({ groups });
+        } catch (err: any) {
+            set({ error: err.message });
+        } finally {
+            set({ isLoading: false });
+        }
     },
 
-    fetchGroupDetails: async (groupId) => {
-        set({ loading: true });
-        const group = await expenseGroupService.getById(groupId);
-        const members = await expenseGroupMemberService.getMembers(groupId);
-        set({ selectedGroup: group, members, loading: false });
+    async fetchGroupsByUserId(userId: string) {
+        set({ isLoading: true });
+        try {
+            const groups = await groupService.fetchGroupsByUserId(userId);
+            set({ groups });
+        } catch (err: any) {
+            set({ error: err.message });
+        } finally {
+            set({ isLoading: false });
+        }
     },
 
-    createGroup: async ({ name, description, visibility }) => {
-        const user = supabase.auth.getUser();
-
-        const createdBy = (await user)?.data.user?.id ?? "";
-
-        await expenseGroupService.createGroup({
-            name,
-            description,
-            visibility: visibility as "Private" | "Public",
-            created_by: createdBy
-        });
-
-        await useGroupStore.getState().fetchGroups();
+    async fetchGroupDetails(groupId: number) {
+        set({ isLoading: true });
+        try {
+            const group = await groupService.fetchGroupDetails(groupId);
+            set({ selectedGroup: group });
+        } catch (err: any) {
+            set({ error: err.message });
+        } finally {
+            set({ isLoading: false });
+        }
     },
 
-    addMember: async (groupId, email, permissionLevel) => {
-        const { data: user } = await supabase
-            .from("users")
-            .select("id")
-            .eq("email", email)
-            .single();
+    async createGroup(payload: any) {
+        set({ isLoading: true });
+        try {
+            const created = await groupService.createGroup(payload);
 
-        if (!user) throw new Error("User not found");
+            set((s) => ({
+                groups: [created, ...s.groups],
+                selectedGroup: created
+            }));
 
-        const currentUser = (await supabase.auth.getUser()).data.user?.id;
-
-        await expenseGroupMemberService.addMember({
-            groupId,
-            userId: user.id,
-            permission_level: permissionLevel,
-            created_by: currentUser!
-        });
-
-        await useGroupStore.getState().fetchGroupDetails(groupId);
+            return created;
+        } catch (err: any) {
+            set({ error: err.message });
+        } finally {
+            set({ isLoading: false });
+        }
     },
 
-    deleteGroup: async (groupId) => {
-        await expenseGroupService.deleteGroup(groupId);
-        // Refresh the groups list after deletion
-        await useGroupStore.getState().fetchGroups();
+    async updateGroup(id: number, updates: any) {
+        set({ isLoading: true });
+        try {
+            const updated = await groupService.updateGroup(id, updates);
+
+            set((s) => ({
+                groups: s.groups.map((g) => (g.id === id ? updated : g)),
+                selectedGroup: s.selectedGroup?.id === id ? updated : s.selectedGroup
+            }));
+
+            return updated;
+        } catch (err: any) {
+            set({ error: err.message });
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    async deleteGroup(id: number) {
+        set({ isLoading: true });
+        try {
+            // await groupService.archiveGroup(id);
+            await groupService.deleteGroup(id);
+
+            set((s) => ({
+                groups: s.groups.filter((g) => g.id !== id),
+                selectedGroup: s.selectedGroup?.id === id ? null : s.selectedGroup
+            }));
+
+            return true;
+        } catch (err: any) {
+            set({ error: err.message });
+            return false;
+        } finally {
+            set({ isLoading: false });
+        }
+    },
+
+    async addMember(groupId: number, email: string, permission: any) {
+        try {
+            await memberService.addMember(groupId, email, permission);
+            await get().fetchGroupDetails(groupId);
+        } catch (err: any) {
+            set({ error: err.message });
+        }
     }
 }));

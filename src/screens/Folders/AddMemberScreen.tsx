@@ -6,7 +6,7 @@ import { useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/RootStackParamList";
 import { useGroupStore } from "../../store/groupStore";
 import { useNavigation } from "@react-navigation/native";
-import { PermissionLevel } from "../../types/ExpenseGroup";
+import { PermissionLevel } from "../../types/Folder";
 
 type AddMemberRouteProp = RouteProp<RootStackParamList, "AddMember">;
 

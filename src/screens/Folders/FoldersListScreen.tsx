@@ -1,16 +1,19 @@
-import React, { useEffect } from "react";
+import React, { useContext, useEffect } from "react";
 import { View, FlatList } from "react-native";
 import { FAB, Text } from "react-native-paper";
 import { useGroupStore } from "../../store/groupStore";
-import GroupCard from "../../components/GroupCard";
 import { useAppNavigation } from "../../hooks/useAppNavigation";
+import { FolderCard } from "../../components/FolderCard";
+import { AuthContext } from '../../context/AuthContext';
 
-export default function ExpenseGroupListScreen() {
-    const navigation = useAppNavigation<"ExpenseGroupList">();
-    const { groups, fetchGroups } = useGroupStore();
+export default function FoldersListScreen() {
+    const navigation = useAppNavigation<"FoldersList">();
+    const { user } = useContext(AuthContext);
+    const { groups, fetchGroupsByUserId } = useGroupStore();
 
     useEffect(() => {
-        fetchGroups(); // fetch groups from store/backend
+        // console.log("USER__FoldersListScreen", user);
+        fetchGroupsByUserId(user?.id);
     }, []);
 
     return (
@@ -24,9 +27,9 @@ export default function ExpenseGroupListScreen() {
                     </Text>
                 }
                 renderItem={({ item }) => (
-                    <GroupCard
+                    <FolderCard
                         group={item}
-                        onPress={() => navigation.navigate("ExpenseGroupDetails", { groupId: item?.id })}
+                        onPress={() => navigation.navigate("FolderDetails", { groupId: item?.id })}
                     />
                 )}
             />

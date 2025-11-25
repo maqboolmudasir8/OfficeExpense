@@ -1,7 +1,7 @@
 // src/screens/ExpenseGroups/AddGroupScreen.tsx
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import { createGroup } from '../../api/groupService';
+import { createGroup } from '../../api/folderService';
 import { RootStackParamList } from '../../types/RootStackParamList';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 

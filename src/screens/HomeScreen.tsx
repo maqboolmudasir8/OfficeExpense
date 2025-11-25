@@ -5,7 +5,7 @@ import { Text, Button, Card, useTheme, Divider } from 'react-native-paper';
 import { supabase } from '../api/supabaseClient';
 import { AuthContext } from '../context/AuthContext';
 import { Expense } from '../types/Expense';
-import { ExpenseGroup } from '../types/ExpenseGroup';
+import { Folder } from '../types/Folder';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/RootStackParamList';
 
@@ -14,7 +14,7 @@ type Props = NativeStackScreenProps<RootStackParamList, 'Home'>;
 export default function HomeScreen({ navigation }: Props) {
     const theme = useTheme();
     const { user, signOut } = useContext(AuthContext);
-    const [expenseGroups, setExpenseGroups] = useState<ExpenseGroup[]>([]);
+    const [expenseGroups, setExpenseGroups] = useState<Folder[]>([]);
     const [expenses, setExpenses] = useState<Expense[]>([]);
     const [loadingGroups, setLoadingGroups] = useState(true);
     const [loadingExpenses, setLoadingExpenses] = useState(true);
@@ -23,7 +23,7 @@ export default function HomeScreen({ navigation }: Props) {
     const fetchExpenseGroups = async () => {
         setLoadingGroups(true);
         const { data, error } = await supabase
-            .from('expense_groups')
+            .from('folders')
             .select('*')
             .order('created_at', { ascending: false });
         if (error) console.log('Error fetching groups:', error.message);
@@ -81,7 +81,7 @@ export default function HomeScreen({ navigation }: Props) {
                         >
                             <Card.Content>
                                 <Text variant="titleSmall" style={{ fontWeight: 'bold', color: theme.colors.onSurface }}>
-                                    {item.name}
+                                    {item.title}
                                 </Text>
                                 {item.description && (
                                     <Text variant="bodySmall" style={{ color: theme.colors.onSurfaceVariant, marginTop: 4 }}>

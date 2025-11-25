@@ -5,7 +5,6 @@ import { StatusBar } from 'react-native';
 import { Provider as PaperProvider, MD3LightTheme } from 'react-native-paper';
 import { NavigationContainer, DefaultTheme as NavigationTheme } from '@react-navigation/native';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { useFonts } from 'expo-font';
 
 import { AuthProvider } from './src/context/AuthContext';
 import AppNavigator from './src/navigation/AppNavigator';
@@ -30,21 +29,12 @@ const navigationTheme = {
 };
 
 export default function App() {
-  // Load custom fonts
-  // const [fontsLoaded] = useFonts({
-  //   'sans-regular': require('./assets/fonts/Roboto-Regular.ttf'),
-  //   'sans-medium': require('./assets/fonts/Roboto-Medium.ttf'),
-  //   'sans-bold': require('./assets/fonts/Roboto-Bold.ttf'),
-  // });
 
   // Set status bar style
   useEffect(() => {
     StatusBar.setBarStyle('dark-content');
   }, []);
 
-  // if (!fontsLoaded) {
-  //   return null; // Or a loading indicator
-  // }
 
   return (
     <QueryClientProvider client={queryClient}>

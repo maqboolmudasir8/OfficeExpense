@@ -7,13 +7,19 @@ import MaterialCommunityIcons from 'react-native-vector-icons/MaterialCommunityI
 import LoginScreen from '../screens/Auth/LoginScreen';
 import SignupScreen from '../screens/Auth/SignupScreen';
 import HomeScreen from '../screens/HomeScreen';
-import ExpenseGroupListScreen from '../screens/ExpenseGroups/ExpenseGroupListScreen';
-import CreateExpenseGroupScreen from '../screens/ExpenseGroups/CreateExpenseGroupScreen';
-import ExpenseGroupDetailsScreen from '../screens/ExpenseGroups/ExpenseGroupDetailsScreen';
-import ExpenseGroupMembersScreen from '../screens/ExpenseGroups/ExpenseGroupMembersScreen';
-import AddMemberScreen from '../screens/ExpenseGroups/AddMemberScreen';
+import FoldersListScreen from '../screens/Folders/FoldersListScreen';
+import CreateExpenseGroupScreen from '../screens/Folders/CreateExpenseGroupScreen';
+import FolderDetailsScreen from '../screens/Folders/FolderDetailsScreen';
+import ExpenseGroupMembersScreen from '../screens/Folders/ExpenseGroupMembersScreen';
+import AddMemberScreen from '../screens/Folders/AddMemberScreen';
 import { AuthContext } from '../context/AuthContext';
 import { RootStackParamList } from '../types/RootStackParamList';
+import ExpenseListScreen from '../screens/Expenses/ExpenseListScreen';
+import AddExpenseScreen from '../screens/Expenses/AddExpenseScreen';
+import EditExpenseScreen from '../screens/Expenses/EditExpenseScreen';
+import ExpenseDetailScreen from '../screens/Expenses/ExpenseDetailScreen';
+import FileDetailScreen from '../screens/Files/FileDetailScreen';
+import AddFileMemberScreen from '../screens/Files/AddFileMemberScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 const Tab = createBottomTabNavigator<RootStackParamList>();
@@ -35,7 +41,7 @@ const AppTabs = () => (
                 let iconName = '';
 
                 if (route.name === 'Home') iconName = 'home';
-                if (route.name === 'ExpenseGroupList') iconName = 'clipboard-list';
+                if (route.name === 'FoldersList') iconName = 'clipboard-list';
 
                 return <MaterialCommunityIcons name={iconName} color={color} size={size} />;
             },
@@ -44,7 +50,8 @@ const AppTabs = () => (
         })}
     >
         <Tab.Screen name="Home" component={HomeScreen} />
-        <Tab.Screen name="ExpenseGroupList" component={ExpenseGroupListScreen} />
+        <Tab.Screen name="FoldersList" component={FoldersListScreen} />
+        <Tab.Screen name="ExpenseList" component={ExpenseListScreen} />
     </Tab.Navigator>
 );
 
@@ -53,46 +60,88 @@ const MainStack = () => (
     <Stack.Navigator
         screenOptions={{
             headerShown: false,
-            presentation: 'card' // This is the default, but explicit is better
+            presentation: 'card',
         }}
     >
+        {/* Tabs */}
         <Stack.Screen name="MainTabs" component={AppTabs} />
+
         <Stack.Screen
+            name="FoldersList"
+            component={FoldersListScreen}
+            options={{ title: 'My Expense Groups' }}
+        />
+        <Stack.Screen
+            name="FolderDetails"
+            component={FolderDetailsScreen}
+            options={{ title: 'Group Details' }}
+        />
+        <Stack.Screen
+            name="CreateExpenseGroup"
+            component={CreateExpenseGroupScreen}
+            options={{ title: 'New Group' }}
+        />
+
+        <Stack.Screen
+            name="FileDetail"
+            component={FileDetailScreen}
+            options={{ title: 'File Details' }}
+        />
+        <Stack.Screen
+            name="AddFileMember"
+            component={AddFileMemberScreen}
+            options={{ title: 'Add Member' }}
+        />
+
+        {/* Modals / screens outside tabs */}
+        {/* <Stack.Screen
             name="CreateExpenseGroup"
             component={CreateExpenseGroupScreen}
             options={{
                 presentation: 'modal',
                 headerShown: true,
-                title: 'Create New Group'
+                title: 'Create New Group',
             }}
-        />
-        <Stack.Screen
-            name="ExpenseGroupDetails"
+        /> */}
+        {/* <Stack.Screen
+            name="FolderDetails"
             component={ExpenseGroupDetailsScreen}
-            options={{
-                headerShown: true,
-                title: 'Group Details'
-            }}
-        />
-        <Stack.Screen
+            options={{ headerShown: true, title: 'Group Details' }}
+        /> */}
+        {/* <Stack.Screen
             name="ExpenseGroupMembers"
             component={ExpenseGroupMembersScreen}
-            options={{
-                headerShown: true,
-                title: 'Group Members'
-            }}
-        />
+            options={{ headerShown: true, title: 'Group Members' }}
+        /> */}
         <Stack.Screen
             name="AddMember"
             component={AddMemberScreen}
-            options={{
-                headerShown: true,
-                title: 'Add Member',
-                presentation: 'modal'
-            }}
+            options={{ headerShown: true, title: 'Add Member', presentation: 'modal' }}
+        />
+
+        {/* ✅ AddExpenseScreen */}
+        <Stack.Screen
+            name="AddExpense"
+            component={AddExpenseScreen}
+            options={{ headerShown: true, title: 'Add Expense' }}
+        />
+
+        {/* Optional: EditExpenseScreen */}
+        <Stack.Screen
+            name="EditExpense"
+            component={EditExpenseScreen}
+            options={{ headerShown: true, title: 'Edit Expense' }}
+        />
+
+        {/* Optional: ExpenseDetailScreen */}
+        <Stack.Screen
+            name="ExpenseDetail"
+            component={ExpenseDetailScreen}
+            options={{ headerShown: true, title: 'Expense Details' }}
         />
     </Stack.Navigator>
 );
+
 
 export default function AppNavigator() {
     const { user } = useContext(AuthContext);

@@ -1,8 +1,8 @@
 import React from "react";
 import { List, Text } from "react-native-paper";
-import { GroupMember } from "../types/ExpenseGroup";
+import { FolderMember } from "../types/Folder";
 
-export default function MemberListItem({ member }: { member: GroupMember }) {
+export default function MemberListItem({ member }: { member: FolderMember }) {
     return (
         <List.Item
             title={member.full_name}

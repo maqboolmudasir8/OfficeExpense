@@ -71,14 +71,24 @@ export default function LoginScreen({ navigation }: Props) {
                         mode="contained"
                         onPress={handleLogin}
                         style={styles.button}
-                        contentStyle={{ paddingVertical: 6 }}
-                        loading={loading}
-                        disabled={loading}
-                        buttonColor={theme.colors.primary} // Set proper background
-                        icon="login" // Pass icon name as string (Paper will use your Paper icon set)
+                        contentStyle={{
+                            paddingVertical: 6,
+                            flexDirection: 'row',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                        }}
+                        loading={loading}       // Shows spinner automatically
+                        disabled={loading}      // Prevents multiple clicks
+                        buttonColor={theme.colors.primary} // Keeps background same
                     >
-                        Login
+                        {/* Show icon only when not loading */}
+                        {!loading && <Icon name="login" size={20} color="#fff" />}
+
+                        <Text style={{ color: '#fff', marginLeft: !loading ? 8 : 0 }}>
+                            Login
+                        </Text>
                     </Button>
+
 
                     <TouchableOpacity
                         onPress={() => navigation.navigate('Signup')}

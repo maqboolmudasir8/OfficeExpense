@@ -1,7 +1,7 @@
 // src/screens/ExpenseGroups/GroupListScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { View, FlatList, Text, TouchableOpacity, ActivityIndicator, Button, StyleSheet } from 'react-native';
-import { fetchGroups } from '../../api/groupService';
+import { groupService } from '../../api/folderService';
 import { RootStackParamList } from '../../types/RootStackParamList';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -14,7 +14,7 @@ export default function GroupListScreen({ navigation }: Props) {
     const loadGroups = async () => {
         setLoading(true);
         try {
-            const data = await fetchGroups();
+            const data = await groupService.fetchGroups();
             setGroups(data);
         } catch (error) {
             console.log('Error fetching groups:', error);
