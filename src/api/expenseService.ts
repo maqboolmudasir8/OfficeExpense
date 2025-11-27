@@ -3,7 +3,6 @@ import { Expense } from "../types/Expense";
 import { supabase } from "./supabaseClient";
 
 
-
 export async function fetchExpenses() {
     const { data, error } = await supabase
         .from("expenses")
@@ -39,16 +38,32 @@ export async function fetchExpenseById(expenseId: number) {
 }
 
 export async function addExpense(expense: Omit<Expense, 'id' | 'created_at' | 'updated_at'>) {
+    console.log("expense___addExpense", expense);
+
     const { data, error } = await supabase
         .from('expenses')
         .insert({
+            file_id: expense.file_id,
+            folder_id: expense.folder_id,
+            expense_title: expense.expense_title,
             amount: expense.amount,
             currency: expense.currency,
             notes: expense.notes,
             spent_at: expense.spent_at,
             category: expense.category,
-            file_id: expense.file_id,
-            created_by: expense.created_by
+            payment_method: expense.payment_method,
+            merchant_name: expense.merchant_name,
+            location: expense.location,
+            paid_by: expense.paid_by,
+            tags: expense.tags,
+            receipt_url: expense.receipt_url,
+            // status: expense.status,
+            created_by: expense.created_by,
+            // created_at: expense.created_at,
+            // attachment_urls: expense.attachment_urls,
+            // is_reimbursable: expense.is_reimbursable,
+            // approved_at: expense.approved_at,
+            // approved_by: expense.approved_by,
         })
         .select('*')
         .single();

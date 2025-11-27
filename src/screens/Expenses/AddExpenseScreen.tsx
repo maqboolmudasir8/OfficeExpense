@@ -1,9 +1,9 @@
-// AddExpenseScreen.tsx
+// AddExpenseScreen.tsx (updated)
 import React, { useContext, useState } from "react";
-import { ScrollView, Alert, StyleSheet } from "react-native";
+import { ScrollView, Alert, StyleSheet, Image } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { addExpense } from "../../api/expenseService";
-import { EXPENSE_CATEGORIES, PAYMENT_METHODS, EXPENSE_STATUSES, CURRENCIES, } from "../../constants/expenseOptions";
+import { EXPENSE_CATEGORIES } from "../../constants/expenseOptions";
 import { RootStackParamList } from "../../types/RootStackParamList";
 import { AuthContext } from "../../context/AuthContext";
 import { Expense } from "../../types/Expense";
@@ -12,6 +12,8 @@ import TextInput from "../../components/TextInput";
 import Button from "../../components/Button";
 import Dropdown from "../../components/Dropdown";
 import Text from "../../components/Text";
+import { launchImageLibrary } from 'react-native-image-picker';
+import { deleteFile, getPublicUrl, uploadFile } from "../Files/services/storageService";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddExpense">;
 
@@ -21,7 +23,10 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [spentAt, setSpentAt] = useState(new Date());
 
-    // Form state matching Expense model
+    const [image, setImage] = useState<any>(null);
+    const [isUploading, setIsUploading] = useState(false);
+    const [uploadedPath, setUploadedPath] = useState<string | null>(null);
+
     const [expense, setExpense] = useState<Partial<Expense>>({
         expense_title: "",
         amount: 0,
@@ -39,6 +44,64 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
 
     const updateField = (key: keyof Expense, value: any) => {
         setExpense((prev) => ({ ...prev, [key]: value }));
+    };
+
+    // Pick image from library
+    const pickImage = async () => {
+        const result = await launchImageLibrary({ mediaType: 'photo', quality: 0.8 });
+        if (!result.didCancel && result.assets && result.assets.length > 0) {
+            setImage(result.assets[0]);
+        }
+    };
+
+    // Upload selected image to Supabase
+    const uploadImage = async () => {
+        if (!image?.uri) {
+            Alert.alert("No image selected", "Please pick an image first.");
+            return;
+        }
+
+        if (!user?.id) {
+            Alert.alert("Not logged in", "User must be logged in to upload.");
+            return;
+        }
+
+        try {
+            setIsUploading(true);
+
+            const ext = image.fileName?.split('.').pop() || 'jpg';
+            const filePath = `${user.id}/${Date.now()}_${Math.random().toString(36).substring(2, 8)}.${ext}`;
+
+            await uploadFile(image.uri, filePath, image.type || 'image/jpeg');
+            const publicUrl = await getPublicUrl(filePath);
+
+            if (publicUrl) {
+                updateField("receipt_url", publicUrl);
+                setUploadedPath(filePath);   // <-- store the actual path
+                Alert.alert("Success", "Image uploaded successfully!");
+            }
+        } catch (error) {
+            console.error("Upload Error:", error);
+            Alert.alert("Upload Error", "Failed to upload image");
+        } finally {
+            setIsUploading(false);
+        }
+    };
+
+    const deleteUploadedImage = async () => {
+        if (!uploadedPath) return;
+
+        try {
+            await deleteFile(uploadedPath);
+            setUploadedPath(null);
+            updateField("receipt_url", "");
+            setImage(null);
+
+            Alert.alert("Deleted", "Image removed successfully.");
+        } catch (error) {
+            console.error("Delete Error:", error);
+            Alert.alert("Error", "Failed to delete image.");
+        }
     };
 
     const handleSave = async () => {
@@ -132,12 +195,12 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
                 style={styles.input}
             /> */}
 
-            <TextInput
+            {/* <TextInput
                 label="Receipt URL (optional)"
                 value={expense.receipt_url || ""}
                 onChangeText={(v) => updateField("receipt_url", v)}
                 style={styles.input}
-            />
+            /> */}
 
             <Dropdown
                 label="Category"
@@ -168,6 +231,34 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
             /> */}
 
             <DateTimeSelector value={spentAt} onChange={setSpentAt} />
+            <Text> {spentAt.toDateString()}</Text>
+
+            <Button
+                label={image ? "Change Image" : "Pick Image"}
+                mode="outlined"
+                onPress={pickImage}
+                style={{ marginVertical: 10 }}
+            />
+
+            {image && <Image source={{ uri: image.uri }} style={styles.image} />}
+
+            {image && (
+                <Button
+                    label={isUploading ? "Uploading..." : "Upload Image"}
+                    mode="contained"
+                    onPress={uploadImage}
+                    disabled={isUploading}
+                />
+            )}
+
+            {uploadedPath && (
+                <Button
+                    label="Delete Uploaded Image"
+                    mode="outlined"
+                    onPress={deleteUploadedImage}
+                    style={{ marginTop: 8 }}
+                />
+            )}
 
             <Button
                 label="Save Expense"
@@ -176,20 +267,13 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
                 loading={isSubmitting}
                 onPress={handleSave}
             />
-
         </ScrollView>
     );
-};
+}
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        padding: 16,
-    },
-    input: {
-        marginBottom: 12,
-    },
-    saveButton: {
-        marginTop: 20,
-    },
+    container: { flex: 1, padding: 16 },
+    input: { marginBottom: 12 },
+    saveButton: { marginTop: 20 },
+    image: { width: "100%", height: 250, marginVertical: 10, resizeMode: "cover" },
 });

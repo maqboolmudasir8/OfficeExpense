@@ -1,15 +1,30 @@
 export interface Expense {
     id?: number;
-    amount: number;
-    currency: string;
-    notes: string | null;
-    spent_at: string;
-    category: string;
+    file_id?: number;
+    folder_id?: number;
 
-    // category_id: number | null;
-    file_id: number;
-    created_by: string;
+    expense_title: string; // input
+    amount: number; // input
+    currency: string; // input
+    notes: string | null; // input
+    spent_at: string; // input
+    category: string; // input
+    payment_method?: string; // input // Cash
+    merchant_name?: string; // input
+    location?: string; // input
+    paid_by?: string; // input
+    tags?: string; // input
+    receipt_url?: string; // input
+    // status?: string; // input
+
     created_at?: string;
+    created_by: string;
     updated_at?: string;
+    updated_by?: string;
 
+
+    // attachment_urls?: string[];
+    // is_reimbursable?: boolean;
+    // approved_at?: string;
+    // approved_by?: string;
 }

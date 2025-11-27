@@ -3,8 +3,8 @@ import { StyleProp, StyleSheet, TextStyle } from "react-native";
 import { TextInput as RNPTextInput, TextInputProps as RNPTextInputProps } from "react-native-paper";
 
 interface TextInputProps
-    // extends RNPTextInputProps 
-    {
+// extends RNPTextInputProps 
+{
     label: string;
     value?: string;
     onChangeText?: (text: string) => void;
@@ -13,7 +13,11 @@ interface TextInputProps
     keyboardType?: RNPTextInputProps['keyboardType'];
 }
 
-export default function TextInput({ label, style, ...props }: TextInputProps) {
+export default function TextInput2({ label, style, ...props }: TextInputProps) {
+    return <RNPTextInput label={label} style={[styles.input, style]} {...props} />;
+}
+
+export const TextInput: React.FC<TextInputProps> = ({ label, style, ...props }: TextInputProps) => {
     return <RNPTextInput label={label} style={[styles.input, style]} {...props} />;
 }
 

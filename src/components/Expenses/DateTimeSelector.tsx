@@ -1,8 +1,9 @@
 // DateTimeSelector.tsx
 import React, { useState } from "react";
 import { View, Platform } from "react-native";
-import { TextInput, Button, Text } from "react-native-paper";
 import DateTimePicker from "@react-native-community/datetimepicker";
+import Button from "../Button";
+import Text from "../Text";
 
 interface DateTimeSelectorProps {
     value: Date;
@@ -45,11 +46,8 @@ export default function DateTimeSelector({ value, onChange }: DateTimeSelectorPr
 
     return (
         <View>
-            {/* <Button title="Select Date & Time" onPress={() => setShowDatePicker(true)} /> */}
-            <Button mode="outlined" onPress={() => setShowDatePicker(true)}>
-                Select Date & Time
-            </Button>
-            <Text>Selected: {value.toLocaleString()}</Text>
+            <Button label="Select Date & Time" mode="outlined" onPress={() => setShowDatePicker(true)} />
+            {/* <Text>Selected: {value.toLocaleString()}</Text> */}
 
             {showDatePicker && (
                 <DateTimePicker
