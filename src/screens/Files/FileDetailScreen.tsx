@@ -10,133 +10,24 @@ import {
     Divider,
     IconButton,
     Menu,
-    Portal,
-    Dialog,
-    List,
     Chip
 } from 'react-native-paper';
-import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
-import { TabView, SceneMap, TabBar } from 'react-native-tab-view';
+import { RouteProp, useRoute } from '@react-navigation/native';
+import { TabView, TabBar } from 'react-native-tab-view';
 import { File, FileMember, FileStatus } from '../../types/File';
 import { fileService } from '../../api/fileService';
 import { AuthContext } from '../../context/AuthContext';
 import { format } from 'date-fns';
 import { PermissionLevel } from '../../types/Folder';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
-import { ExpensesTab } from '../../components/FileDetails/ExpensesTab';
+import { ExpensesTab } from './components/ExpensesTab';
+import ConfirmationDialog from '../../components/Files/ConfirmationDialog';
+import FileDetailsTab from './components/FileDetailsTab';
 
 type FileDetailRouteParams = {
     fileId: number;
 };
 
-interface DetailsTabProps {
-    file: File | null;
-    isEditing: boolean;
-    formData: {
-        title: string;
-        description: string;
-        status: FileStatus;
-    };
-    onFormChange: (field: string, value: string) => void;
-}
-
-const DetailsTab: React.FC<DetailsTabProps> = ({
-    file,
-    isEditing,
-    formData,
-    onFormChange
-}) => {
-    if (!file) {
-        return (
-            <View style={styles.loadingContainer}>
-                <ActivityIndicator size="large" />
-                <Text style={styles.loadingText}>Loading file details...</Text>
-            </View>
-        );
-    }
-
-    return (
-        <ScrollView
-            style={styles.tabContent}
-            contentContainerStyle={styles.scrollContent}
-        >
-            <View style={styles.detailSection}>
-                {isEditing ? (
-                    <TextInput
-                        label="Title"
-                        value={formData.title}
-                        onChangeText={(text) => onFormChange('title', text)}
-                        style={styles.input}
-                        mode="outlined"
-                        error={!formData.title}
-                        disabled={!isEditing}
-                    />
-                ) : (
-                    <Text style={styles.title} numberOfLines={2} ellipsizeMode="tail">
-                        {file?.title || 'Untitled File'}
-                    </Text>
-                )}
-
-                <View style={styles.metaContainer}>
-                    <Chip
-                        icon="calendar"
-                        style={[styles.chip, styles.dateChip]}
-                        textStyle={styles.chipText}
-                    >
-                        Created: {format(new Date(file.created_at), 'MMM d, yyyy')}
-                    </Chip>
-                    <Chip
-                        icon={file.status === 'Active' ? 'check-circle' : 'archive'}
-                        style={[
-                            styles.chip,
-                            styles.statusChip,
-                            {
-                                backgroundColor: file.status === 'Active'
-                                    ? '#e8f5e9'
-                                    : '#fff3e0',
-                            }
-                        ]}
-                        textStyle={[
-                            styles.chipText,
-                            {
-                                color: file.status === 'Active'
-                                    ? '#2e7d32'
-                                    : '#e65100'
-                            }
-                        ]}
-                    >
-                        {file.status}
-                    </Chip>
-                </View>
-
-                <View style={styles.section}>
-                    <Text style={styles.sectionTitle}>Description</Text>
-                    {isEditing ? (
-                        <TextInput
-                            label="Description"
-                            value={formData.description}
-                            onChangeText={(text) => onFormChange('description', text)}
-                            multiline
-                            numberOfLines={4}
-                            style={[styles.input, styles.descriptionInput]}
-                            mode="outlined"
-                            disabled={!isEditing}
-                        />
-                    ) : (
-                        <Text
-                            style={[
-                                styles.description,
-                                !file.description && styles.placeholderText
-                            ]}
-                        >
-                            {file.description || 'No description provided'}
-                        </Text>
-                    )}
-                </View>
-            </View>
-        </ScrollView>
-    );
-};
 
 export default function FileDetailScreen() {
     const theme = useTheme();
@@ -145,8 +36,8 @@ export default function FileDetailScreen() {
     const { user } = React.useContext(AuthContext);
     const [index, setIndex] = React.useState(0);
     const [routes] = React.useState([
-        { key: 'details', title: 'Details' },
         { key: 'expenses', title: 'Expenses' },
+        { key: 'details', title: 'Details' },
     ]);
 
     const [file, setFile] = useState<File | null>(null);
@@ -164,9 +55,12 @@ export default function FileDetailScreen() {
 
     const renderScene = ({ route }: { route: { key: string } }) => {
         switch (route.key) {
+            case 'expenses':
+                return file ? <ExpensesTab fileId={file.id} /> : null;
+
             case 'details':
                 return (
-                    <DetailsTab
+                    <FileDetailsTab
                         file={file}
                         isEditing={isEditing}
                         formData={formData}
@@ -175,8 +69,7 @@ export default function FileDetailScreen() {
                         }
                     />
                 );
-            case 'expenses':
-                return file ? <ExpensesTab fileId={file.id} /> : null;
+
             default:
                 return null;
         }
@@ -369,27 +262,20 @@ export default function FileDetailScreen() {
                 </View>
             )}
 
-            <Portal>
-                <Dialog
-                    visible={showDeleteDialog}
-                    onDismiss={() => setShowDeleteDialog(false)}
-                >
-                    <Dialog.Title>Delete File</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>Are you sure you want to delete this file? This action cannot be undone.</Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={() => setShowDeleteDialog(false)}>Cancel</Button>
-                        <Button
-                            onPress={handleDelete}
-                            textColor={theme.colors.error}
-                            loading={isLoading}
-                        >
-                            Delete
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
+            <ConfirmationDialog
+                visible={showDeleteDialog}
+                onCancel={() => setShowDeleteDialog(false)}
+                onConfirm={handleDelete}
+
+                loading={isLoading}
+                danger={true}
+                icon="trash-can"
+                title="Delete File"
+                message="Are you sure you want to delete this file? This action cannot be undone."
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                confirmColor={theme.colors.error}
+            />
         </View>
     );
 }
