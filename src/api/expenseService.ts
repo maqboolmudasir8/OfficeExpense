@@ -43,23 +43,23 @@ export async function addExpense(expense: Omit<Expense, 'id' | 'created_at' | 'u
     const { data, error } = await supabase
         .from('expenses')
         .insert({
-            file_id: expense.file_id,
-            folder_id: expense.folder_id,
-            expense_title: expense.expense_title,
-            amount: expense.amount,
-            currency: expense.currency,
-            notes: expense.notes,
-            spent_at: expense.spent_at,
-            category: expense.category,
-            payment_method: expense.payment_method,
-            merchant_name: expense.merchant_name,
-            location: expense.location,
-            paid_by: expense.paid_by,
-            tags: expense.tags,
-            receipt_url: expense.receipt_url,
-            // status: expense.status,
-            created_by: expense.created_by,
+            file_id: expense?.file_id,
+            folder_id: expense?.folder_id,
+            amount: expense?.amount,
+            category: expense?.category,
             // created_at: expense.created_at,
+            created_by: expense?.created_by,
+            currency: expense?.currency,
+            expense_title: expense?.expense_title,
+            location: expense?.location,
+            merchant_name: expense?.merchant_name,
+            notes: expense?.notes,
+            paid_by: expense?.paid_by,
+            payment_method: expense?.payment_method,
+            receipt_url: expense?.receipt_url,
+            spent_at: expense?.spent_at,
+            tags: expense?.tags,
+            // status: expense.status,
             // attachment_urls: expense.attachment_urls,
             // is_reimbursable: expense.is_reimbursable,
             // approved_at: expense.approved_at,
@@ -73,6 +73,7 @@ export async function addExpense(expense: Omit<Expense, 'id' | 'created_at' | 'u
 }
 
 export async function updateExpense(expenseId: number, updates: Partial<Expense>) {
+    console.log("expense___updateExpense", expenseId, updates);
     const { data, error } = await supabase
         .from("expenses")
         .update({ ...updates, updated_at: new Date().toISOString() })
@@ -94,12 +95,12 @@ export async function deleteExpense(expenseId: number) {
     return true;
 }
 
-export async function getExpenseSummary(fileId: number) {
-    const { data, error } = await supabase
-        .rpc('get_expense_summary', { file_id: fileId });
+// export async function getExpenseSummary(fileId: number) {
+//     const { data, error } = await supabase
+//         .rpc('get_expense_summary', { file_id: fileId });
 
-    if (error) throw error;
-    return data;
-}
+//     if (error) throw error;
+//     return data;
+// }
 
 

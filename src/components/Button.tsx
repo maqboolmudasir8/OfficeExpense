@@ -9,6 +9,7 @@ interface ButtonProps {
     onPress?: () => void;
     disabled?: boolean;
     loading?: boolean;
+    buttonColor?: string;
 }
 
 export default function Button({ label, style, ...props }: ButtonProps) {

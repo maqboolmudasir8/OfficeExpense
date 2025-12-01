@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { Text, Button, Card, Menu, Dialog, Portal, Avatar, Searchbar, useTheme, IconButton } from 'react-native-paper';
 import { format } from 'date-fns';
-import { fetchExpensesByFileId, deleteExpense, getExpenseSummary } from '../../../api/expenseService';
+import { fetchExpensesByFileId, deleteExpense } from '../../../api/expenseService';
 import { useNavigation } from '@react-navigation/native';
 import { Expense } from '../../../types/Expense';
 import { AuthContext } from '../../../context/AuthContext';

@@ -1,22 +1,30 @@
 import { PermissionLevel } from './Folder';
 import { User } from './User';
 
-export type FileStatus = 'Active' | 'Archived';
+export enum FileStatus {
+    Active,
+    Archived
+}
+
+export enum FileVisibility {
+    Private,
+    Public
+};
+
 // export type PermissionLevel = 'view' | 'edit' | 'admin';
 
 export interface File {
-    id: number;
+    id?: number;
     folder_id: number;
     title: string;
     description?: string;
-    file_type: string;
-    file_size?: number;
-    file_url?: string;
-    status: FileStatus;
-    created_at: string;
-    created_by: string;
-    updated_at: string;
-    created_by_user?: User;
+    status?: FileStatus;
+    visibility?: FileVisibility;
+
+    created_at?: string;
+    created_by?: string;
+    updated_at?: string;
+    updated_by?: string;
 }
 
 export interface FileMember {
@@ -36,18 +44,18 @@ export interface FilePermission {
     can_manage_members: boolean;
 }
 
-export interface CreateFileData {
-    title: string;
-    description?: string;
-    folder_id: number;
-    
-    file_size?: number;
-    file_url?: string;
-    status?: FileStatus;
+// export interface CreateFileData {
+//     title: string;
+//     description?: string;
+//     folder_id: number;
 
-    created_at: string;
-    created_by: string;
-}
+//     // file_size?: number;
+//     // file_url?: string;
+//     status?: FileStatus;
+
+//     created_at: string;
+//     created_by: string;
+// }
 
 export interface UpdateFileData {
     title?: string;
@@ -66,3 +74,14 @@ export interface FileFilterParams {
 
 // Export types properly for isolated modules
 // export type { File as default };
+
+
+export const statusOptions = [
+    { label: "Active", value: FileStatus.Active.toString() },
+    { label: "Archived", value: FileStatus.Archived.toString() },
+];
+
+export const visibilityOptions = [
+    { label: "Public", value: FileVisibility.Public.toString() },
+    { label: "Private", value: FileVisibility.Private.toString() },
+];

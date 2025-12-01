@@ -12,15 +12,18 @@ import {
     Dialog,
     TextInput
 } from 'react-native-paper';
-import { File, FileMember, FileStatus, CreateFileData } from '../../types/File';
-import { fileService } from '../../api/fileService';
-import { AuthContext } from '../../context/AuthContext';
-import { useAppNavigation } from '../../hooks/useAppNavigation';
+import { useAppNavigation } from '../../../../hooks/useAppNavigation';
+import { AuthContext } from '../../../../context/AuthContext';
+import { CreateFileData, File, FileMember, FileStatus, } from '../../../../types/File';
+import { fileService } from '../../../../api/fileService';
+import ConfirmationDialog from '../../../../components/Files/ConfirmationDialog';
 
 interface FilesTabProps {
     folderId: number;
     // onFilePress?: (file: File) => void;
 }
+
+// TODO: fix issue of not showing updated files when this component is mounted again(this page appears again from FileDetailScreen)
 
 export const FilesTab: React.FC<FilesTabProps> = ({ folderId, /*onFilePress*/ }) => {
     const theme = useTheme();
@@ -261,19 +264,20 @@ export const FilesTab: React.FC<FilesTabProps> = ({ folderId, /*onFilePress*/ })
                 </Dialog.Actions>
             </Dialog>
 
-            {/* Delete Confirmation Dialog */}
-            <Dialog visible={isDeleteDialogVisible} onDismiss={() => setIsDeleteDialogVisible(false)}>
-                <Dialog.Title>Delete File</Dialog.Title>
-                <Dialog.Content>
-                    <Text>Are you sure you want to delete "{selectedFile?.title}"? This action cannot be undone.</Text>
-                </Dialog.Content>
-                <Dialog.Actions>
-                    <Button onPress={() => setIsDeleteDialogVisible(false)}>Cancel</Button>
-                    <Button onPress={handleDeleteFile} textColor="red">
-                        Delete
-                    </Button>
-                </Dialog.Actions>
-            </Dialog>
+            <ConfirmationDialog
+                visible={isDeleteDialogVisible}
+                onCancel={() => setIsDeleteDialogVisible(false)}
+                onConfirm={handleDeleteFile}
+
+                loading={isLoading}
+                danger={true}
+                icon="trash-can"
+                title="Delete File"
+                message={`Are you sure you want to delete ${selectedFile?.title}? This action cannot be undone.`}
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                confirmColor={theme.colors.error}
+            />
 
             {/* File Options Menu */}
             <Menu
@@ -292,20 +296,20 @@ export const FilesTab: React.FC<FilesTabProps> = ({ folderId, /*onFilePress*/ })
                     title="Open"
                 />
                 <Divider />
-                <Menu.Item
+                {/* <Menu.Item
                     onPress={() => {
                         // Handle share
                         setIsMenuVisible(false);
                     }}
                     title="Share"
-                />
-                <Menu.Item
+                /> */}
+                {/* <Menu.Item
                     onPress={() => {
                         // Handle download
                         setIsMenuVisible(false);
                     }}
                     title="Download"
-                />
+                /> */}
                 <Divider />
                 <Menu.Item
                     onPress={() => {

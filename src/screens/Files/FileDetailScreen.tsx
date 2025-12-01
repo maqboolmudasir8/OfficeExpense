@@ -17,12 +17,11 @@ import { TabView, TabBar } from 'react-native-tab-view';
 import { File, FileMember, FileStatus } from '../../types/File';
 import { fileService } from '../../api/fileService';
 import { AuthContext } from '../../context/AuthContext';
-import { format } from 'date-fns';
 import { PermissionLevel } from '../../types/Folder';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import { ExpensesTab } from './components/ExpensesTab';
 import ConfirmationDialog from '../../components/Files/ConfirmationDialog';
-import FileDetailsTab from './components/FileDetailsTab';
+import { FileDetailsTab } from './components/FileDetailsTab';
 
 type FileDetailRouteParams = {
     fileId: number;
@@ -46,7 +45,7 @@ export default function FileDetailScreen() {
     const [formData, setFormData] = useState({
         title: '',
         description: '',
-        status: 'Active' as FileStatus,
+        status: FileStatus.Active,
     });
     const [members, setMembers] = useState<FileMember[]>([]);
     const [isLoadingMembers, setIsLoadingMembers] = useState(false);
@@ -56,7 +55,7 @@ export default function FileDetailScreen() {
     const renderScene = ({ route }: { route: { key: string } }) => {
         switch (route.key) {
             case 'expenses':
-                return file ? <ExpensesTab fileId={file.id} /> : null;
+                return file ? <ExpensesTab fileId={file?.id ?? 0} /> : null;
 
             case 'details':
                 return (
@@ -106,7 +105,7 @@ export default function FileDetailScreen() {
             setFormData({
                 title: fileData.title,
                 description: fileData.description || '',
-                status: fileData.status,
+                status: fileData?.status ?? FileStatus.Active,
             });
         } catch (error) {
             console.error('Error loading file:', error);
@@ -138,7 +137,7 @@ export default function FileDetailScreen() {
         if (!file) return;
 
         try {
-            const updatedFile = await fileService.updateFile(file.id, formData);
+            const updatedFile = await fileService.updateFile(file?.id ?? 0, formData);
             setFile(updatedFile);
             setIsEditing(false);
             Alert.alert('Success', 'File updated successfully');
@@ -152,7 +151,7 @@ export default function FileDetailScreen() {
         if (!file) return;
 
         try {
-            await fileService.deleteFile(file.id);
+            await fileService.deleteFile(file?.id ?? 0);
             navigation.goBack();
             Alert.alert('Success', 'File deleted successfully');
         } catch (error) {
@@ -165,7 +164,7 @@ export default function FileDetailScreen() {
         if (!file) return;
 
         try {
-            const newMember = await fileService.addFileMember(file.id, email, permission);
+            const newMember = await fileService.addFileMember(file?.id ?? 0, email, permission);
             setMembers(prev => [...prev, newMember]);
             Alert.alert('Success', 'Member added successfully');
         } catch (error) {
@@ -178,7 +177,7 @@ export default function FileDetailScreen() {
         if (!file) return;
 
         try {
-            await fileService.removeFileMember(file.id, memberId);
+            await fileService.removeFileMember(file?.id ?? 0, memberId);
             setMembers(prev => prev.filter(m => m.user_id !== memberId));
             Alert.alert('Success', 'Member removed successfully');
         } catch (error) {

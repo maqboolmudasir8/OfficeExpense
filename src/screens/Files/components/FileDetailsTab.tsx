@@ -10,7 +10,7 @@ import {
 import { format } from 'date-fns';
 import { File, FileStatus } from '../../../types/File';
 
-interface DetailsTabProps {
+interface FileDetailsTabProps {
     file: File | null;
     isEditing: boolean;
     formData: {
@@ -21,7 +21,7 @@ interface DetailsTabProps {
     onFormChange: (field: string, value: string) => void;
 }
 
-const FileDetailsTab: React.FC<DetailsTabProps> = ({ file, isEditing, formData, onFormChange }) => {
+export const FileDetailsTab: React.FC<FileDetailsTabProps> = ({ file, isEditing, formData, onFormChange }) => {
 
     if (!file) {
         return (
@@ -62,24 +62,24 @@ const FileDetailsTab: React.FC<DetailsTabProps> = ({ file, isEditing, formData, 
                         style={[styles.chip, styles.dateChip]}
                         textStyle={styles.chipText}
                     >
-                        Created (screens - Files - Components - DetailsTab): {format(new Date(file.created_at), 'MMM d, yyyy')}
+                        Created (screens - Files - Components - DetailsTab): {format(new Date(file.created_at ?? ''), 'MMM d, yyyy')}
                     </Chip>
 
                     <Chip
-                        icon={file.status === 'Active' ? 'check-circle' : 'archive'}
+                        icon={file.status == FileStatus.Active ? 'check-circle' : 'archive'}
                         style={[
                             styles.chip,
                             styles.statusChip,
                             {
                                 backgroundColor:
-                                    file.status === 'Active' ? '#e8f5e9' : '#fff3e0',
+                                    file.status == FileStatus.Active ? '#e8f5e9' : '#fff3e0',
                             },
                         ]}
                         textStyle={[
                             styles.chipText,
                             {
                                 color:
-                                    file.status === 'Active' ? '#2e7d32' : '#e65100',
+                                    file.status == FileStatus.Active ? '#2e7d32' : '#e65100',
                             },
                         ]}
                     >
@@ -118,7 +118,6 @@ const FileDetailsTab: React.FC<DetailsTabProps> = ({ file, isEditing, formData, 
     );
 };
 
-export default FileDetailsTab;
 
 const styles = StyleSheet.create({
     tabContent: {
