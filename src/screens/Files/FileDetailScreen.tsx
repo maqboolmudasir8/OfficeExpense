@@ -1,16 +1,14 @@
 // src/screens/Files/FileDetailScreen.tsx
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Dimensions } from 'react-native';
+import { View, StyleSheet, Alert, Dimensions } from 'react-native';
 import {
     Text,
     Button,
-    TextInput,
     useTheme,
     ActivityIndicator,
     Divider,
     IconButton,
     Menu,
-    Chip
 } from 'react-native-paper';
 import { RouteProp, useRoute } from '@react-navigation/native';
 import { TabView, TabBar } from 'react-native-tab-view';
@@ -23,17 +21,20 @@ import { ExpensesTab } from './components/ExpensesTab';
 import ConfirmationDialog from '../../components/Files/ConfirmationDialog';
 import { FileDetailsTab } from './components/FileDetailsTab';
 
-type FileDetailRouteParams = {
+interface FileDetailRouteParams {
     fileId: number;
+    folderId: number;
 };
 
-
+// export const FileDetailScreen: React.FC<FileDetailRouteParams> = ({ fileId }) => {
 export default function FileDetailScreen() {
     const theme = useTheme();
     const navigation = useAppNavigation<"FileDetail">();
-    const route = useRoute<RouteProp<{ params: FileDetailRouteParams }, 'params'>>();
+    const navigationRoute = useRoute<RouteProp<{ params: FileDetailRouteParams }, 'params'>>();
+
     const { user } = React.useContext(AuthContext);
     const [index, setIndex] = React.useState(0);
+
     const [routes] = React.useState([
         { key: 'expenses', title: 'Expenses' },
         { key: 'details', title: 'Details' },
@@ -55,7 +56,12 @@ export default function FileDetailScreen() {
     const renderScene = ({ route }: { route: { key: string } }) => {
         switch (route.key) {
             case 'expenses':
-                return file ? <ExpensesTab fileId={file?.id ?? 0} /> : null;
+                return file ? (
+                    <ExpensesTab
+                        fileId={file?.id ?? 0}
+                        folderId={navigationRoute?.params?.folderId}
+                    />
+                ) : null;
 
             case 'details':
                 return (
@@ -98,9 +104,11 @@ export default function FileDetailScreen() {
     );
 
     const loadFileDetails = useCallback(async () => {
+        console.log("FileDetailScreen___loadFileDetails__fileId:", navigationRoute?.params?.fileId);
+        console.log("FileDetailScreen___loadFileDetails__folderId:", navigationRoute?.params?.folderId);
         try {
             setIsLoading(true);
-            const fileData = await fileService.getFileById(route.params.fileId);
+            const fileData = await fileService.getFileById(navigationRoute?.params?.fileId);
             setFile(fileData);
             setFormData({
                 title: fileData.title,
@@ -113,12 +121,12 @@ export default function FileDetailScreen() {
         } finally {
             setIsLoading(false);
         }
-    }, [route.params.fileId]);
+    }, [navigationRoute?.params?.fileId]);
 
     const loadMembers = useCallback(async () => {
         try {
             setIsLoadingMembers(true);
-            const membersList = await fileService.listFileMembers(route.params.fileId);
+            const membersList = await fileService.listFileMembers(navigationRoute?.params?.fileId);
             setMembers(membersList);
         } catch (error) {
             console.error('Error loading members:', error);
@@ -126,7 +134,7 @@ export default function FileDetailScreen() {
         } finally {
             setIsLoadingMembers(false);
         }
-    }, [route.params.fileId]);
+    }, [navigationRoute?.params?.fileId]);
 
     useEffect(() => {
         loadFileDetails();
@@ -192,14 +200,18 @@ export default function FileDetailScreen() {
                 <IconButton
                     icon="arrow-left"
                     onPress={() => navigation.goBack()}
-                    size={24}
+                    size={20} // Icon size
+                    style={{
+                        margin: 0,
+                        width: 32,
+                        height: 20,
+                        padding: 0,
+                    }}
                 />
-                <View style={styles.headerTitleContainer}>
-                    <Text style={styles.headerTitle} numberOfLines={1}>
-                        {file?.title || 'File Details'}
-                    </Text>
-                </View>
-                <Menu
+                <Text style={styles.headerTitle} numberOfLines={1}>
+                    {file?.title || 'File Details'}
+                </Text>
+                {/* <Menu
                     visible={isMenuVisible}
                     onDismiss={() => setIsMenuVisible(false)}
                     anchor={
@@ -228,7 +240,7 @@ export default function FileDetailScreen() {
                         leadingIcon="delete"
                         titleStyle={{ color: theme.colors.error }}
                     />
-                </Menu>
+                </Menu> */}
             </View>
 
             {isLoading ? (

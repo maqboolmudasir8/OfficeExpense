@@ -1,5 +1,5 @@
 // expenseService.ts
-import { Expense } from "../types/Expense";
+import { Expense, ExpenseFilters } from "../types/Expense";
 import { supabase } from "./supabaseClient";
 
 
@@ -103,4 +103,74 @@ export async function deleteExpense(expenseId: number) {
 //     return data;
 // }
 
+export async function fetchExpenseSummary(fileId: number) {
+    const { data, error } = await supabase
+        .rpc("expense_summary", { file_id_input: fileId });
 
+    if (error) throw error;
+    return data;
+}
+
+// export async function fetchCategoryBreakdown(fileId: number) {
+//     const { data, error } = await supabase
+//         .from("expenses")
+//         .select("category, total:sum(amount)")
+//         .eq("file_id", fileId)
+//         .group("category");
+
+//     if (error) throw error;
+//     return data;
+// }
+
+export async function fetchMonthlyTotals(fileId: number) {
+    const { data, error } = await supabase
+        .from("expenses")
+        .select("spent_at, amount")
+        .eq("file_id", fileId)
+        .order("spent_at", { ascending: true });
+
+    if (error) throw error;
+    return data;
+}
+
+
+
+
+
+export async function fetchFilteredExpenses(filters: ExpenseFilters) {
+    let query = supabase.from("expenses").select("*");
+
+    if (filters.fileId)
+        query = query.eq("file_id", filters.fileId);
+
+    if (filters.folderId)
+        query = query.eq("folder_id", filters.folderId);
+
+    if (filters.fromDate)
+        query = query.gte("spent_at", filters.fromDate);
+
+    if (filters.toDate)
+        query = query.lte("spent_at", filters.toDate);
+
+    if (filters.category)
+        query = query.eq("category", filters.category);
+
+    if (filters.status)
+        query = query.eq("status", filters.status);
+
+    if (filters.minAmount)
+        query = query.gte("amount", filters.minAmount);
+
+    if (filters.maxAmount)
+        query = query.lte("amount", filters.maxAmount);
+
+    if (filters.search)
+        query = query.ilike("notes", `%${filters.search}%`);
+
+    if (filters.sortBy)
+        query = query.order(filters.sortBy, { ascending: filters.sortOrder === 'asc' });
+
+    const { data, error } = await query;
+    if (error) throw error;
+    return data;
+}

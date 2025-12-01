@@ -3,7 +3,7 @@ import { Folder, FolderMember, PermissionLevel } from "../types/Folder";
 import { handleSupabaseError } from "../utils/handleSupabaseError";
 import { folderMemberService } from "./folderMemberService";
 
-export const groupService = {
+export const folderService = {
 
     async fetchGroups(): Promise<Folder[]> {
         const { data, error } = await supabase

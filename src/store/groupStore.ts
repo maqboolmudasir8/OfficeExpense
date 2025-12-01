@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { groupService } from "../api/folderService";
+import { folderService } from "../api/folderService";
 import { memberService } from "../api/expenseGroupMemberService";
 
 interface GroupStore {
@@ -30,7 +30,7 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     async fetchGroups() {
         set({ isLoading: true });
         try {
-            const groups = await groupService.fetchGroups();
+            const groups = await folderService.fetchGroups();
             set({ groups });
         } catch (err: any) {
             set({ error: err.message });
@@ -42,7 +42,7 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     async fetchGroupsByUserId(userId: string) {
         set({ isLoading: true });
         try {
-            const groups = await groupService.fetchGroupsByUserId(userId);
+            const groups = await folderService.fetchGroupsByUserId(userId);
             set({ groups });
         } catch (err: any) {
             set({ error: err.message });
@@ -54,7 +54,7 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     async fetchGroupDetails(groupId: number) {
         set({ isLoading: true });
         try {
-            const group = await groupService.fetchGroupDetails(groupId);
+            const group = await folderService.fetchGroupDetails(groupId);
             set({ selectedGroup: group });
         } catch (err: any) {
             set({ error: err.message });
@@ -66,7 +66,7 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     async createGroup(payload: any) {
         set({ isLoading: true });
         try {
-            const created = await groupService.createGroup(payload);
+            const created = await folderService.createGroup(payload);
 
             set((s) => ({
                 groups: [created, ...s.groups],
@@ -84,7 +84,7 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
     async updateGroup(id: number, updates: any) {
         set({ isLoading: true });
         try {
-            const updated = await groupService.updateGroup(id, updates);
+            const updated = await folderService.updateGroup(id, updates);
 
             set((s) => ({
                 groups: s.groups.map((g) => (g.id === id ? updated : g)),
@@ -103,7 +103,7 @@ export const useGroupStore = create<GroupStore>((set, get) => ({
         set({ isLoading: true });
         try {
             // await groupService.archiveGroup(id);
-            await groupService.deleteGroup(id);
+            await folderService.deleteGroup(id);
 
             set((s) => ({
                 groups: s.groups.filter((g) => g.id !== id),

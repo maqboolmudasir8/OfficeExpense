@@ -2,19 +2,23 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator, Alert, RefreshControl } from 'react-native';
 import { Text, Button, Card, Menu, Dialog, Portal, Avatar, Searchbar, useTheme, IconButton } from 'react-native-paper';
 import { format } from 'date-fns';
-import { fetchExpensesByFileId, deleteExpense } from '../../../api/expenseService';
+import { fetchExpensesByFileId, deleteExpense, fetchFilteredExpenses } from '../../../api/expenseService';
 import { useNavigation } from '@react-navigation/native';
-import { Expense } from '../../../types/Expense';
+import { Expense, ExpenseFilters } from '../../../types/Expense';
 import { AuthContext } from '../../../context/AuthContext';
+import { ExpensesFilterBottomSheet } from './ExpensesFilterBottomSheet';
+import { useDebounce } from '../../../hooks/useDebounce';
+import ConfirmationDialog from '../../../components/Files/ConfirmationDialog';
 
 interface ExpensesTabProps {
     fileId: number;
+    folderId: number;
     onExpenseAdded?: () => void;
     onExpenseUpdated?: () => void;
     onExpenseDeleted?: () => void;
 }
 
-export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
+export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) => {
     const theme = useTheme();
     const navigation = useNavigation();
     const { user } = React.useContext(AuthContext);
@@ -25,20 +29,40 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
     const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
     const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState(false);
+    const [filterVisible, setFilterVisible] = useState(false);
+    const [menuForId, setMenuForId] = useState<number | null>(null);
+    const debouncedSearch = useDebounce(searchQuery, 400);
+
+    const [filters, setFilters] = useState<ExpenseFilters>({
+        fromDate: undefined,
+        toDate: undefined,
+        category: undefined,
+        status: undefined,
+        minAmount: undefined,
+        maxAmount: undefined,
+        sortBy: 'spent_at',
+        sortOrder: 'desc',
+    });
+
 
     // Load expenses
     const loadExpenses = useCallback(async () => {
+        setIsLoading(true);
         try {
-            const expensesData = await fetchExpensesByFileId(fileId);
+            const expensesData = await fetchFilteredExpenses({
+                fileId,
+                ...filters,
+                search: debouncedSearch,
+            });
             setExpenses(expensesData || []);
         } catch (error) {
-            console.error('Error loading expenses:', error);
-            Alert.alert('Error', 'Failed to load expenses');
+            Alert.alert("Error", "Failed to load filtered expenses");
         } finally {
             setIsLoading(false);
             setIsRefreshing(false);
         }
-    }, [fileId]);
+
+    }, [fileId, filters, debouncedSearch]);
 
     // Initial load
     useEffect(() => {
@@ -66,13 +90,13 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
     };
 
     // Filter expenses based on search query
-    const filteredExpenses = expenses.filter(expense => {
-        const searchLower = searchQuery.toLowerCase();
-        return (
-            (expense.notes?.toLowerCase().includes(searchLower) || '') ||
-            (expense.category?.toLowerCase().includes(searchLower) || '')
-        );
-    });
+    // const filteredExpenses = expenses.filter(expense => {
+    //     const searchLower = searchQuery.toLowerCase();
+    //     return (
+    //         (expense.notes?.toLowerCase().includes(searchLower) || '') ||
+    //         (expense.category?.toLowerCase().includes(searchLower) || '')
+    //     );
+    // });
 
     // Render expense item
     const renderExpenseItem = ({ item }: { item: Expense }) => {
@@ -103,23 +127,23 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
                             {format(new Date(item.spent_at), 'MMM d, yyyy')}
                         </Text>
                         <Menu
-                            visible={isMenuVisible && selectedExpense?.id === item.id}
-                            onDismiss={() => setIsMenuVisible(false)}
+                            visible={menuForId === item.id}
+                            onDismiss={() => setMenuForId(null)}
                             anchor={
                                 <IconButton
                                     icon="dots-vertical"
-                                    size={20}
                                     onPress={() => {
-                                        setSelectedExpense(item);
-                                        setIsMenuVisible(true);
+                                        setMenuForId(item?.id ?? 0);
                                     }}
                                     style={styles.menuButton}
                                 />
                             }
                         >
+
                             <Menu.Item
                                 onPress={() => {
                                     setIsMenuVisible(false);
+                                    setMenuForId(null);
                                     navigation.navigate('EditExpense', {
                                         expenseId: item?.id ?? 0,
                                         fileId: fileId ?? 0
@@ -130,6 +154,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
                             <Menu.Item
                                 onPress={() => {
                                     setIsMenuVisible(false);
+                                    setMenuForId(null);
                                     setSelectedExpense(item);
                                     setIsDeleteDialogVisible(true);
                                 }}
@@ -171,9 +196,20 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
                 placeholderTextColor={theme.colors.onSurfaceVariant}
             />
 
+            <Button
+                mode="outlined"
+                icon="filter"
+                onPress={() => setFilterVisible(true)}
+                style={{ marginVertical: 8 }}
+            >
+                Filters
+            </Button>
+
+
             {/* Expenses List */}
             <FlatList
-                data={filteredExpenses}
+                // data={filteredExpenses}
+                data={expenses}
                 renderItem={renderExpenseItem}
                 keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                 contentContainerStyle={styles.listContent}
@@ -193,7 +229,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
             <Button
                 mode="contained"
                 onPress={() => {
-                    navigation.navigate('AddExpense', { fileId });
+                    navigation.navigate('AddExpense', { fileId, folderId });
                 }}
                 style={styles.addButton}
                 labelStyle={styles.addButtonLabel}
@@ -202,28 +238,27 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId }) => {
                 Add Expense
             </Button>
 
+            <ExpensesFilterBottomSheet
+                visible={filterVisible}
+                onClose={() => setFilterVisible(false)}
+                onApplyFilters={(f) => setFilters(f)}
+            />
+
             {/* Delete Confirmation Dialog */}
-            <Portal>
-                <Dialog
-                    visible={isDeleteDialogVisible}
-                    onDismiss={() => setIsDeleteDialogVisible(false)}
-                >
-                    <Dialog.Title>Delete Expense</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>Are you sure you want to delete this expense?</Text>
-                        <Text style={{ fontWeight: 'bold', marginTop: 8 }}>
-                            {selectedExpense?.notes}
-                        </Text>
-                        <Text>${selectedExpense?.amount?.toFixed(2)}</Text>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={() => setIsDeleteDialogVisible(false)}>Cancel</Button>
-                        <Button onPress={handleDeleteExpense} textColor={theme.colors.error}>
-                            Delete
-                        </Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
+            <ConfirmationDialog
+                visible={isDeleteDialogVisible}
+                onCancel={() => setIsDeleteDialogVisible(false)}
+                onConfirm={handleDeleteExpense}
+
+                loading={isLoading}
+                danger={true}
+                icon="trash-can"
+                title="Delete Expense"
+                message="Are you sure you want to delete this expense?"
+                confirmLabel="Delete"
+                cancelLabel="Cancel"
+                confirmColor={theme.colors.error}
+            />
         </View>
     );
 };

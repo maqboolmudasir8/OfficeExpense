@@ -1,7 +1,7 @@
 // src/screens/ExpenseGroups/GroupDetailScreen.tsx
 import React, { useEffect, useState } from 'react';
 import { View, Text, ActivityIndicator, Button, Alert } from 'react-native';
-import { groupService } from '../../api/folderService';
+import { folderService } from '../../api/folderService';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/RootStackParamList';
 
@@ -15,7 +15,7 @@ export default function GroupDetailScreen({ route, navigation }: Props) {
     const loadGroup = async () => {
         setLoading(true);
         try {
-            const data = await groupService.fetchGroupDetails(groupId);
+            const data = await folderService.fetchGroupDetails(groupId);
             setGroup(data);
         } catch (error) {
             console.log('Error fetching group:', error);
@@ -31,7 +31,7 @@ export default function GroupDetailScreen({ route, navigation }: Props) {
                 text: 'Delete',
                 onPress: async () => {
                     try {
-                        await groupService.deleteGroup(groupId);
+                        await folderService.deleteGroup(groupId);
                         Alert.alert('Deleted', 'Group deleted successfully');
                         navigation.goBack();
                     } catch (error: any) {

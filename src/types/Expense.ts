@@ -28,3 +28,17 @@ export interface Expense {
     // approved_at?: string;
     // approved_by?: string;
 }
+
+export interface ExpenseFilters {
+    fileId?: number;
+    folderId?: number;
+    fromDate?: string;      // YYYY-MM-DD
+    toDate?: string;        // YYYY-MM-DD
+    category?: string;
+    status?: string;
+    minAmount?: number;
+    maxAmount?: number;
+    search?: string;
+    sortBy?: 'spent_at' | 'amount' | 'category';
+    sortOrder?: 'asc' | 'desc';
+}

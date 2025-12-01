@@ -18,7 +18,7 @@ import { deleteFile, getPublicUrl, uploadFile } from "../Files/services/storageS
 type Props = NativeStackScreenProps<RootStackParamList, "AddExpense">;
 
 export default function AddExpenseScreen({ route, navigation }: Props) {
-    const { fileId } = route.params;
+    const { fileId, folderId } = route.params;
     const { user } = useContext(AuthContext);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [spentAt, setSpentAt] = useState(new Date());
@@ -114,6 +114,7 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
             setIsSubmitting(true);
             await addExpense({
                 file_id: fileId ?? 0,
+                folder_id: folderId ?? 0,
                 created_by: user?.id || "",
                 expense_title: expense.expense_title,
                 amount: Number(expense.amount),
