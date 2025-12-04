@@ -1,16 +1,17 @@
 // DateTimeSelector.tsx
 import React, { useState } from "react";
-import { View, Platform } from "react-native";
+import { View, Platform, StyleProp, ViewStyle } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
-import Button from "../Button";
+import { Button } from "../Button";
 import Text from "../Text";
 
 interface DateTimeSelectorProps {
     value: Date;
     onChange: (date: Date) => void;
+    style?: StyleProp<ViewStyle> | undefined;
 }
 
-export default function DateTimeSelector({ value, onChange }: DateTimeSelectorProps) {
+export default function DateTimeSelector({ value, style, onChange }: DateTimeSelectorProps) {
     const [showDatePicker, setShowDatePicker] = useState(false);
     const [showTimePicker, setShowTimePicker] = useState(false);
 
@@ -55,6 +56,7 @@ export default function DateTimeSelector({ value, onChange }: DateTimeSelectorPr
                     mode="date"
                     display="default"
                     onChange={handleDateChange}
+                    style={style}
                 />
             )}
 
@@ -64,6 +66,7 @@ export default function DateTimeSelector({ value, onChange }: DateTimeSelectorPr
                     mode="time"
                     display="default"
                     onChange={handleTimeChange}
+                    style={style}
                 />
             )}
         </View>

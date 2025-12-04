@@ -1,7 +1,7 @@
 import React from "react";
+import { Button } from "./Button";
 import { Animated, Easing, StyleSheet, View } from "react-native";
 import { Dialog as RNPDialog, Portal, Text, IconButton } from "react-native-paper";
-import Button from "./Button";
 
 export interface DialogProps {
     visible: boolean;

@@ -140,7 +140,7 @@ export async function fetchMonthlyTotals(fileId: number) {
 export async function fetchFilteredExpenses(filters: ExpenseFilters) {
     let query = supabase.from("expenses").select("*");
 
-    if (filters.fileId)
+    if (filters.fileId && filters.fileId > 0)
         query = query.eq("file_id", filters.fileId);
 
     if (filters.folderId)
@@ -164,8 +164,12 @@ export async function fetchFilteredExpenses(filters: ExpenseFilters) {
     if (filters.maxAmount)
         query = query.lte("amount", filters.maxAmount);
 
-    if (filters.search)
-        query = query.ilike("notes", `%${filters.search}%`);
+    // Multi-field search
+    if (filters.search) {
+        query = query.or(
+            `notes.ilike.%${filters.search}%,expense_title.ilike.%${filters.search}%`
+        );
+    }
 
     if (filters.sortBy)
         query = query.order(filters.sortBy, { ascending: filters.sortOrder === 'asc' });

@@ -1,6 +1,6 @@
-// AddExpenseScreen.tsx (updated)
+// AddExpenseScreen.tsx
 import React, { useContext, useState } from "react";
-import { ScrollView, Alert, StyleSheet, Image } from "react-native";
+import { Alert, Image, ScrollView, View } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { addExpense } from "../../api/expenseService";
 import { EXPENSE_CATEGORIES } from "../../constants/expenseOptions";
@@ -10,10 +10,12 @@ import { Expense } from "../../types/Expense";
 import DateTimeSelector from "../../components/Expenses/DateTimeSelector";
 import TextInput from "../../components/TextInput";
 import Button from "../../components/Button";
-import Dropdown from "../../components/Dropdown";
+import { Dropdown } from "../../components/Dropdown";
 import Text from "../../components/Text";
 import { launchImageLibrary } from 'react-native-image-picker';
 import { deleteFile, getPublicUrl, uploadFile } from "../Files/services/storageService";
+import { globalStyles } from "../../styles/globalStyles";
+import { theme } from "../../theme";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddExpense">;
 
@@ -22,7 +24,6 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
     const { user } = useContext(AuthContext);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [spentAt, setSpentAt] = useState(new Date());
-
     const [image, setImage] = useState<any>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [uploadedPath, setUploadedPath] = useState<string | null>(null);
@@ -141,48 +142,91 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
     };
 
     return (
-        <ScrollView style={styles.container}>
-            <Text variant="headlineSmall" style={{ marginBottom: 12 }}>
-                Add Expense
-            </Text>
+        <ScrollView style={globalStyles.layout.container}>
+            <View style={{ padding: 16 }}>
+                <Text style={[globalStyles.typography.title, { marginBottom: 16 }]}>
+                    Add Expense
+                </Text>
 
-            <TextInput
-                label="Title"
-                value={expense.expense_title}
-                onChangeText={(v) => updateField("expense_title", v)}
-                style={styles.input}
-            />
+                <Text style={globalStyles.forms.label}>Title *</Text>
+                <TextInput
+                    value={expense.expense_title}
+                    onChangeText={(v) => updateField("expense_title", v)}
+                    style={globalStyles.forms.input}
+                />
 
-            <TextInput
-                label="Amount"
-                keyboardType="numeric"
-                value={expense.amount?.toString() || ""}
-                onChangeText={(v) => updateField("amount", Number(v))}
-                style={styles.input}
-            />
+                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Amount *</Text>
+                <TextInput
+                    keyboardType="numeric"
+                    value={expense.amount?.toString() || ""}
+                    onChangeText={(v) => updateField("amount", Number(v))}
+                    style={globalStyles.forms.input}
+                />
 
-            <TextInput
-                label="Notes (optional)"
-                value={expense.notes || ""}
-                onChangeText={(v) => updateField("notes", v)}
-                style={styles.input}
-            />
+                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Category *</Text>
+                <Dropdown
+                    options={EXPENSE_CATEGORIES}
+                    value={expense.category}
+                    onSelect={(value) => updateField("category", value)}
+                    placeholder="Select category"
+                    style={[globalStyles.forms.input, { marginBottom: 16 }]}
+                />
 
-            <TextInput
-                label="Merchant Name (optional)"
-                value={expense.merchant_name || ""}
-                onChangeText={(v) => updateField("merchant_name", v)}
-                style={styles.input}
-            />
+                {/* <Dropdown
+                label="Payment Method (optional)"
+                options={PAYMENT_METHODS}
+                value={expense.payment_method}
+                onSelect={(v) => updateField("payment_method", v)}
+            /> */}
 
-            <TextInput
-                label="Location (optional)"
-                value={expense.location || ""}
-                onChangeText={(v) => updateField("location", v)}
-                style={styles.input}
-            />
+                {/* <Dropdown
+                label="Status"
+                options={EXPENSE_STATUSES}
+                value={expense.status}
+                onSelect={(v) => updateField("status", v)}
+            /> */}
 
-            {/* <TextInput
+                {/* <Dropdown
+                label="Currency"
+                options={CURRENCIES}
+                value={expense.currency}
+                onSelect={(v) => updateField("currency", v)}
+            /> */}
+
+                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Payment Method</Text>
+
+                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Date & Time</Text>
+                <DateTimeSelector
+                    value={spentAt}
+                    onChange={setSpentAt}
+                    style={{ marginBottom: 16 }}
+                />
+
+                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Notes (optional)</Text>
+                <TextInput
+                    // label="Notes (optional)"
+                    value={expense.notes || ""}
+                    onChangeText={(v) => updateField("notes", v)}
+                    style={globalStyles.forms.input}
+                    multiline
+                    numberOfLines={3}
+                />
+
+                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Merchant (optional)</Text>
+                <TextInput
+                    value={expense.merchant_name || ""}
+                    onChangeText={(v) => updateField("merchant_name", v)}
+                    style={globalStyles.forms.input}
+                />
+
+                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Location (optional)</Text>
+                <TextInput
+                    value={expense.location || ""}
+                    onChangeText={(v) => updateField("location", v)}
+                    style={globalStyles.forms.input}
+                />
+
+                {/* <TextInput
                 label="Paid By (optional)"
                 value={expense.paid_by || ""}
                 onChangeText={(v) => updateField("paid_by", v)}
@@ -196,85 +240,62 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
                 style={styles.input}
             /> */}
 
-            {/* <TextInput
+                {/* <TextInput
                 label="Receipt URL (optional)"
                 value={expense.receipt_url || ""}
                 onChangeText={(v) => updateField("receipt_url", v)}
                 style={styles.input}
             /> */}
 
-            <Dropdown
-                label="Category"
-                options={EXPENSE_CATEGORIES}
-                value={expense.category}
-                onSelect={(v) => updateField("category", v)}
-            />
+                {image?.uri && (
+                    <Image
+                        source={{ uri: image.uri }}
+                        style={{
+                            width: '100%',
+                            height: 200,
+                            marginVertical: 16,
+                            borderRadius: 8,
+                        }}
+                        resizeMode="contain"
+                    />
+                )}
 
-            {/* <Dropdown
-                label="Payment Method (optional)"
-                options={PAYMENT_METHODS}
-                value={expense.payment_method}
-                onSelect={(v) => updateField("payment_method", v)}
-            /> */}
+                <View style={[globalStyles.layout.row, { marginTop: 16, marginBottom: 24 }]}>
+                    <Button
+                        label={image ? 'Change Image' : 'Select Receipt'}
+                        mode="outlined"
+                        onPress={pickImage}
+                        style={{ flex: 1, marginRight: 8 }}
+                    />
+                    {image && (
+                        <Button
+                            label="Remove"
+                            mode="outlined"
+                            onPress={deleteUploadedImage}
+                            style={{ flex: 1, marginLeft: 8 }}
+                            textColor={theme.colors.error}
+                        />
+                    )}
+                </View>
 
-            {/* <Dropdown
-                label="Status"
-                options={EXPENSE_STATUSES}
-                value={expense.status}
-                onSelect={(v) => updateField("status", v)}
-            /> */}
+                {image && !expense.receipt_url && (
+                    <Button
+                        label={isUploading ? 'Uploading...' : 'Upload Receipt'}
+                        mode="contained"
+                        onPress={uploadImage}
+                        loading={isUploading}
+                        style={{ marginBottom: 16 }}
+                    />
+                )}
 
-            {/* <Dropdown
-                label="Currency"
-                options={CURRENCIES}
-                value={expense.currency}
-                onSelect={(v) => updateField("currency", v)}
-            /> */}
-
-            <DateTimeSelector value={spentAt} onChange={setSpentAt} />
-            <Text> {spentAt.toDateString()}</Text>
-
-            <Button
-                label={image ? "Change Image" : "Pick Image"}
-                mode="outlined"
-                onPress={pickImage}
-                style={{ marginVertical: 10 }}
-            />
-
-            {image && <Image source={{ uri: image.uri }} style={styles.image} />}
-
-            {image && (
                 <Button
-                    label={isUploading ? "Uploading..." : "Upload Image"}
+                    label={isSubmitting ? 'Saving...' : 'Save Expense'}
                     mode="contained"
-                    onPress={uploadImage}
-                    disabled={isUploading}
+                    onPress={handleSave}
+                    loading={isSubmitting}
+                    style={{ marginTop: 8, marginBottom: 32 }}
                 />
-            )}
-
-            {uploadedPath && (
-                <Button
-                    label="Delete Uploaded Image"
-                    mode="outlined"
-                    onPress={deleteUploadedImage}
-                    style={{ marginTop: 8 }}
-                />
-            )}
-
-            <Button
-                label="Save Expense"
-                mode="contained"
-                style={styles.saveButton}
-                loading={isSubmitting}
-                onPress={handleSave}
-            />
+            </View>
         </ScrollView>
     );
 }
-
-const styles = StyleSheet.create({
-    container: { flex: 1, padding: 16 },
-    input: { marginBottom: 12 },
-    saveButton: { marginTop: 20 },
-    image: { width: "100%", height: 250, marginVertical: 10, resizeMode: "cover" },
-});

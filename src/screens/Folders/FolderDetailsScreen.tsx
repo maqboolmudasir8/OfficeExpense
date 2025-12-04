@@ -6,22 +6,20 @@ import {
     Button,
     useTheme,
     Portal,
-    Dialog,
-    TextInput,
-    Menu,
-    Divider
+    Dialog
 } from 'react-native-paper';
-import { TabView, TabBar, SceneMap } from 'react-native-tab-view';
+import { TabView, TabBar } from 'react-native-tab-view';
 import { useRoute } from '@react-navigation/native';
 import { useGroupStore } from '../../store/groupStore';
-import { Folder, FolderMember, PermissionLevel } from '../../types/Folder';
+import { FolderMember, PermissionLevel } from '../../types/Folder';
 import { supabase } from '../../api/supabaseClient';
 import { folderMemberService } from '../../api/folderMemberService';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import { DetailsTab } from '../../components/FolderDetails/DetailsTab';
 import { MembersTab } from '../../components/FolderDetails/MembersTab';
-import { FilesTab } from '../../components/FolderDetails/FilesTab';
+import { FilesTab } from './FolderDetails/components/FilesTab';
 import { AuthContext } from '../../context/AuthContext';
+import { ExpensesTab } from '../Files/components/ExpensesTab';
 
 type RouteParams = {
     groupId: number;
@@ -91,9 +89,10 @@ export default function FolderDetailsScreen() {
     const [tabState, setTabState] = useState({
         index: 0,
         routes: [
+            { key: 'ExpensesTab', title: 'Expenses' }, // new tab
+            { key: 'FilesTab', title: 'Files' },
             { key: 'details', title: 'Details' },
             { key: 'members', title: 'Members' },
-            { key: 'FilesTab', title: 'Files' },
         ],
     });
 
@@ -228,16 +227,19 @@ export default function FolderDetailsScreen() {
         if (!selectedGroup) return null;
 
         switch (route.key) {
+            case 'ExpensesTab':
+                return <ExpensesTab
+                    fileId={0}
+                    folderId={selectedGroup.id}
+                />;
             case 'FilesTab':
-                return (
-                    <FilesTab
-                        folderId={selectedGroup.id}
-                    // onFilePress={(file) => {
-                    //     // Handle file press if needed
-                    //     console.log('File pressed:', file);
-                    // }}
-                    />
-                );
+                return <FilesTab
+                    folderId={selectedGroup.id}
+                // onFilePress={(file) => {
+                //     // Handle file press if needed
+                //     console.log('File pressed:', file);
+                // }}
+                />;
             case 'details':
                 return <DetailsTab
                     group={selectedGroup}

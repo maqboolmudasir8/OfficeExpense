@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, FlatList, ActivityIndicator, Alert, RefreshControl } from 'react-native';
-import { Text, Button, Card, Menu, Dialog, Portal, Avatar, Searchbar, useTheme, IconButton } from 'react-native-paper';
+import { Text, Button, Card, Menu, Dialog, Portal, Avatar, Searchbar, useTheme, IconButton, FAB } from 'react-native-paper';
 import { format } from 'date-fns';
 import { fetchExpensesByFileId, deleteExpense, fetchFilteredExpenses } from '../../../api/expenseService';
 import { useNavigation } from '@react-navigation/native';
@@ -9,6 +9,7 @@ import { AuthContext } from '../../../context/AuthContext';
 import { ExpensesFilterBottomSheet } from './ExpensesFilterBottomSheet';
 import { useDebounce } from '../../../hooks/useDebounce';
 import ConfirmationDialog from '../../../components/Files/ConfirmationDialog';
+import { ExpenseCard } from '../../Expenses/components/ExpenseCard';
 
 interface ExpensesTabProps {
     fileId: number;
@@ -26,7 +27,6 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
     const [isLoading, setIsLoading] = useState(true);
     const [isRefreshing, setIsRefreshing] = useState(false);
     const [searchQuery, setSearchQuery] = useState('');
-    const [isMenuVisible, setIsMenuVisible] = useState(false);
     const [selectedExpense, setSelectedExpense] = useState<Expense | null>(null);
     const [isDeleteDialogVisible, setIsDeleteDialogVisible] = useState(false);
     const [filterVisible, setFilterVisible] = useState(false);
@@ -51,6 +51,7 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
         try {
             const expensesData = await fetchFilteredExpenses({
                 fileId,
+                folderId,
                 ...filters,
                 search: debouncedSearch,
             });
@@ -142,7 +143,6 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
 
                             <Menu.Item
                                 onPress={() => {
-                                    setIsMenuVisible(false);
                                     setMenuForId(null);
                                     navigation.navigate('EditExpense', {
                                         expenseId: item?.id ?? 0,
@@ -153,7 +153,6 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
                             />
                             <Menu.Item
                                 onPress={() => {
-                                    setIsMenuVisible(false);
                                     setMenuForId(null);
                                     setSelectedExpense(item);
                                     setIsDeleteDialogVisible(true);
@@ -208,9 +207,17 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
 
             {/* Expenses List */}
             <FlatList
-                // data={filteredExpenses}
                 data={expenses}
-                renderItem={renderExpenseItem}
+                renderItem={({ item }) => (
+                    <ExpenseCard
+                        expense={item}
+                        onEdit={(expenseId) => navigation.navigate('EditExpense', { expenseId, fileId })}
+                        onDelete={(expense) => {
+                            setSelectedExpense(expense);
+                            setIsDeleteDialogVisible(true);
+                        }}
+                    />
+                )}
                 keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
                 contentContainerStyle={styles.listContent}
                 ListEmptyComponent={renderEmptyState}
@@ -226,17 +233,15 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
             />
 
             {/* Add Expense Button */}
-            <Button
-                mode="contained"
-                onPress={() => {
-                    navigation.navigate('AddExpense', { fileId, folderId });
-                }}
-                style={styles.addButton}
-                labelStyle={styles.addButtonLabel}
-                icon="plus"
-            >
-                Add Expense
-            </Button>
+            {fileId && fileId > 0 && (
+                <FAB
+                    icon="plus"
+                    style={{ position: "absolute", right: 16, bottom: 16 }}
+                    onPress={() => {
+                        navigation.navigate('AddExpense', { fileId, folderId });
+                    }}
+                />
+            )}
 
             <ExpensesFilterBottomSheet
                 visible={filterVisible}

@@ -1,15 +1,16 @@
 import React from "react";
-import { StyleProp, StyleSheet, TextStyle } from "react-native";
+import { StyleSheet } from "react-native";
+import { globalStyles } from "../styles/globalStyles";
 import { TextInput as RNPTextInput, TextInputProps as RNPTextInputProps } from "react-native-paper";
 
 interface TextInputProps
 // extends RNPTextInputProps 
 {
-    label: string;
+    label?: string;
     value?: string;
     onChangeText?: (text: string) => void;
     mode?: 'flat' | 'outlined';
-    style?: StyleProp<TextStyle>;
+    style?: any;
     keyboardType?: RNPTextInputProps['keyboardType'];
     multiline?: boolean;
     numberOfLines?: number;
@@ -17,21 +18,23 @@ interface TextInputProps
     error?: boolean;
 }
 
-export default function TextInput2({ label, style, ...props }: TextInputProps) {
-    return <RNPTextInput
-        label={label}
-        style={[styles.input, style]}
-        multiline={props.multiline}
-        numberOfLines={props.numberOfLines}
-        {...props} />;
-}
-
-export const TextInput: React.FC<TextInputProps> = ({ label, style, ...props }: TextInputProps) => {
-    return <RNPTextInput label={label} style={[styles.input, style]} {...props} />;
-}
+export const TextInput: React.FC<TextInputProps> = ({ label, style, ...props }) => {
+    return (
+        <RNPTextInput
+            label={label}
+            mode="outlined"
+            dense
+            style={[globalStyles.forms.compactInput, style]}
+            contentStyle={styles.content}
+            theme={{ roundness: 6 }}
+            {...props}
+        />
+    );
+};
 
 const styles = StyleSheet.create({
-    input: {
-        marginBottom: 12,
-    },
+    content: {
+        paddingVertical: 4,
+        fontSize: 14,
+    }
 });

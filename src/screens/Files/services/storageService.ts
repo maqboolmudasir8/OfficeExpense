@@ -66,3 +66,19 @@ export const getPublicUrl = async (filePath: string) => {
     const { data: urlData } = await supabase.storage.from('expense_attachments').getPublicUrl(filePath);
     return urlData?.publicUrl;
 }
+
+export async function deleteFile(path: string) {
+    console.log("path____deleteFile:", path);
+
+    
+    const { error } = await supabase.storage
+        .from("expense_attachments")
+        .remove([path]);
+
+    if (error) {
+        console.error("Delete error:", error);
+        throw error;
+    }
+
+    return true;
+}
