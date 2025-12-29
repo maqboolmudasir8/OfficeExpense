@@ -14,7 +14,7 @@ export default function GroupListScreen({ navigation }: Props) {
     const loadGroups = async () => {
         setLoading(true);
         try {
-            const data = await folderService.fetchGroups();
+            const data = await folderService.fetchFolders();
             setGroups(data);
         } catch (error) {
             console.log('Error fetching groups:', error);

@@ -1,14 +1,14 @@
 import { PermissionLevel } from './Folder';
-import { User } from './User';
+import { SupabaseUser } from './User';
 
 export enum FileStatus {
-    Active,
-    Archived
+    Active = "Active",
+    Archived = "Archived"
 }
 
 export enum FileVisibility {
-    Private,
-    Public
+    Private = "Private",
+    Public = "Public"
 };
 
 // export type PermissionLevel = 'view' | 'edit' | 'admin';
@@ -34,7 +34,7 @@ export interface FileMember {
     permission_level: PermissionLevel;
     created_at: string;
     updated_at: string;
-    user: User;
+    user: SupabaseUser;
 }
 
 export interface FilePermission {

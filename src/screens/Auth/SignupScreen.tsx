@@ -1,11 +1,12 @@
 // src/screens/Auth/SignupScreen.tsx
 import React, { useState, useContext } from 'react';
 import { View, StyleSheet, KeyboardAvoidingView, Platform, Alert, TouchableOpacity } from 'react-native';
-import { Text, TextInput, Button, Card, useTheme } from 'react-native-paper';
+import { TextInput, Button, Card, useTheme } from 'react-native-paper';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../../types/RootStackParamList';
 import { AuthContext } from '../../context/AuthContext';
 import { Icon } from '../../components/Icon';
+import { Text } from '../../components/Text';
 
 type Props = NativeStackScreenProps<RootStackParamList, 'Signup'>;
 

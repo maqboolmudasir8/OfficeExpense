@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from "react";
 import { View, FlatList } from "react-native";
 import { FAB, Text } from "react-native-paper";
-import { useGroupStore } from "../../store/groupStore";
+import { useFolderStore } from "../../store/folderStore";
 import { useAppNavigation } from "../../hooks/useAppNavigation";
 import { FolderCard } from "../../components/FolderCard";
 import { AuthContext } from '../../context/AuthContext';
@@ -9,27 +9,27 @@ import { AuthContext } from '../../context/AuthContext';
 export default function FoldersListScreen() {
     const navigation = useAppNavigation<"FoldersList">();
     const { user } = useContext(AuthContext);
-    const { groups, fetchGroupsByUserId } = useGroupStore();
+    const { folders, fetchFoldersByUserId } = useFolderStore();
 
     useEffect(() => {
         // console.log("USER__FoldersListScreen", user);
-        fetchGroupsByUserId(user?.id);
+        fetchFoldersByUserId(user?.id ?? "");
     }, []);
 
     return (
         <View style={{ flex: 1, padding: 16 }}>
             <FlatList
-                data={groups}
+                data={folders}
                 keyExtractor={(item) => item.id.toString()}
                 ListEmptyComponent={
                     <Text style={{ textAlign: "center", marginTop: 40 }}>
-                        No groups found.
+                        No folders found.
                     </Text>
                 }
                 renderItem={({ item }) => (
                     <FolderCard
-                        group={item}
-                        onPress={() => navigation.navigate("FolderDetails", { groupId: item?.id })}
+                        folder={item}
+                        onPress={() => navigation.navigate("FolderDetails", { folderId: item?.id })}
                     />
                 )}
             />
@@ -37,7 +37,7 @@ export default function FoldersListScreen() {
             <FAB
                 icon="plus"
                 style={{ position: "absolute", right: 16, bottom: 16 }}
-                onPress={() => navigation.navigate("CreateExpenseGroup")}
+                onPress={() => navigation.navigate("CreateFolderScreen")}
             />
         </View>
     );

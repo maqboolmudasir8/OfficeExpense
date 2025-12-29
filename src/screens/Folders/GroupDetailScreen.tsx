@@ -15,7 +15,7 @@ export default function GroupDetailScreen({ route, navigation }: Props) {
     const loadGroup = async () => {
         setLoading(true);
         try {
-            const data = await folderService.fetchGroupDetails(groupId);
+            const data = await folderService.fetchFolderDetails(groupId);
             setGroup(data);
         } catch (error) {
             console.log('Error fetching group:', error);
@@ -31,7 +31,7 @@ export default function GroupDetailScreen({ route, navigation }: Props) {
                 text: 'Delete',
                 onPress: async () => {
                     try {
-                        await folderService.deleteGroup(groupId);
+                        await folderService.deleteFolder(groupId);
                         Alert.alert('Deleted', 'Group deleted successfully');
                         navigation.goBack();
                     } catch (error: any) {

@@ -1,21 +1,21 @@
 // AddExpenseScreen.tsx
 import React, { useContext, useState } from "react";
-import { Alert, Image, ScrollView, View } from "react-native";
+import { Alert, Image, ScrollView, View, StyleSheet, Modal, TouchableWithoutFeedback, TouchableOpacity } from "react-native";
 import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { addExpense } from "../../api/expenseService";
-import { EXPENSE_CATEGORIES } from "../../constants/expenseOptions";
+import { CURRENCIES, EXPENSE_CATEGORIES, PAYMENT_METHODS } from "../../constants/expenseOptions";
 import { RootStackParamList } from "../../types/RootStackParamList";
 import { AuthContext } from "../../context/AuthContext";
 import { Expense } from "../../types/Expense";
 import DateTimeSelector from "../../components/Expenses/DateTimeSelector";
-import TextInput from "../../components/TextInput";
-import Button from "../../components/Button";
-import { Dropdown } from "../../components/Dropdown";
-import Text from "../../components/Text";
+import { TextInput } from "../../components/TextInput";
+import { Button } from "../../components/Button";
+import { Text } from "../../components/Text";
 import { launchImageLibrary } from 'react-native-image-picker';
 import { deleteFile, getPublicUrl, uploadFile } from "../Files/services/storageService";
 import { globalStyles } from "../../styles/globalStyles";
 import { theme } from "../../theme";
+import { Divider, Icon } from "react-native-paper";
 
 type Props = NativeStackScreenProps<RootStackParamList, "AddExpense">;
 
@@ -28,6 +28,7 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
     const [isUploading, setIsUploading] = useState(false);
     const [uploadedPath, setUploadedPath] = useState<string | null>(null);
 
+    const [showCategoryPicker, setShowCategoryPicker] = useState(false);
     const [expense, setExpense] = useState<Partial<Expense>>({
         expense_title: "",
         amount: 0,
@@ -89,19 +90,22 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
         }
     };
 
-    const deleteUploadedImage = async () => {
-        if (!uploadedPath) return;
-
+    const removeImage = async () => {
         try {
-            await deleteFile(uploadedPath);
-            setUploadedPath(null);
-            updateField("receipt_url", "");
-            setImage(null);
+            // If the image was uploaded, delete from storage
+            if (uploadedPath) {
+                await deleteFile(uploadedPath);
+            }
 
-            Alert.alert("Deleted", "Image removed successfully.");
+            // Clear all local state
+            setUploadedPath(null);
+            setImage(null);
+            updateField("receipt_url", "");
+
+            Alert.alert("Deleted", "Receipt removed successfully.");
         } catch (error) {
             console.error("Delete Error:", error);
-            Alert.alert("Error", "Failed to delete image.");
+            Alert.alert("Error", "Failed to remove receipt.");
         }
     };
 
@@ -142,160 +146,371 @@ export default function AddExpenseScreen({ route, navigation }: Props) {
     };
 
     return (
-        <ScrollView style={globalStyles.layout.container}>
-            <View style={{ padding: 16 }}>
-                <Text style={[globalStyles.typography.title, { marginBottom: 16 }]}>
-                    Add Expense
-                </Text>
-
-                <Text style={globalStyles.forms.label}>Title *</Text>
-                <TextInput
-                    value={expense.expense_title}
-                    onChangeText={(v) => updateField("expense_title", v)}
-                    style={globalStyles.forms.input}
-                />
-
-                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Amount *</Text>
-                <TextInput
-                    keyboardType="numeric"
-                    value={expense.amount?.toString() || ""}
-                    onChangeText={(v) => updateField("amount", Number(v))}
-                    style={globalStyles.forms.input}
-                />
-
-                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Category *</Text>
-                <Dropdown
-                    options={EXPENSE_CATEGORIES}
-                    value={expense.category}
-                    onSelect={(value) => updateField("category", value)}
-                    placeholder="Select category"
-                    style={[globalStyles.forms.input, { marginBottom: 16 }]}
-                />
-
-                {/* <Dropdown
-                label="Payment Method (optional)"
-                options={PAYMENT_METHODS}
-                value={expense.payment_method}
-                onSelect={(v) => updateField("payment_method", v)}
-            /> */}
-
-                {/* <Dropdown
-                label="Status"
-                options={EXPENSE_STATUSES}
-                value={expense.status}
-                onSelect={(v) => updateField("status", v)}
-            /> */}
-
-                {/* <Dropdown
-                label="Currency"
-                options={CURRENCIES}
-                value={expense.currency}
-                onSelect={(v) => updateField("currency", v)}
-            /> */}
-
-                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Payment Method</Text>
-
-                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Date & Time</Text>
-                <DateTimeSelector
-                    value={spentAt}
-                    onChange={setSpentAt}
-                    style={{ marginBottom: 16 }}
-                />
-
-                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Notes (optional)</Text>
-                <TextInput
-                    // label="Notes (optional)"
-                    value={expense.notes || ""}
-                    onChangeText={(v) => updateField("notes", v)}
-                    style={globalStyles.forms.input}
-                    multiline
-                    numberOfLines={3}
-                />
-
-                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Merchant (optional)</Text>
-                <TextInput
-                    value={expense.merchant_name || ""}
-                    onChangeText={(v) => updateField("merchant_name", v)}
-                    style={globalStyles.forms.input}
-                />
-
-                <Text style={[globalStyles.forms.label, { marginTop: 8 }]}>Location (optional)</Text>
-                <TextInput
-                    value={expense.location || ""}
-                    onChangeText={(v) => updateField("location", v)}
-                    style={globalStyles.forms.input}
-                />
-
-                {/* <TextInput
-                label="Paid By (optional)"
-                value={expense.paid_by || ""}
-                onChangeText={(v) => updateField("paid_by", v)}
-                style={styles.input}
-            />
-
-            <TextInput
-                label="Tags (comma separated)"
-                value={expense.tags || ""}
-                onChangeText={(v) => updateField("tags", v)}
-                style={styles.input}
-            /> */}
-
-                {/* <TextInput
-                label="Receipt URL (optional)"
-                value={expense.receipt_url || ""}
-                onChangeText={(v) => updateField("receipt_url", v)}
-                style={styles.input}
-            /> */}
-
-                {image?.uri && (
-                    <Image
-                        source={{ uri: image.uri }}
-                        style={{
-                            width: '100%',
-                            height: 200,
-                            marginVertical: 16,
-                            borderRadius: 8,
-                        }}
-                        resizeMode="contain"
+        <View style={styles.container}>
+            <ScrollView
+                style={styles.scrollView}
+                contentContainerStyle={styles.scrollContent}
+                keyboardShouldPersistTaps="handled"
+            >
+                <View style={styles.formGroup}>
+                    <Text variant="titleMedium" style={styles.sectionTitle}>Expense Details</Text>
+                    <TextInput
+                        label="Title *"
+                        value={expense?.expense_title ?? ''}
+                        onChangeText={(text) => updateField('expense_title', text)}
+                        style={styles.input}
                     />
-                )}
 
-                <View style={[globalStyles.layout.row, { marginTop: 16, marginBottom: 24 }]}>
-                    <Button
-                        label={image ? 'Change Image' : 'Select Receipt'}
-                        mode="outlined"
-                        onPress={pickImage}
-                        style={{ flex: 1, marginRight: 8 }}
-                    />
-                    {image && (
-                        <Button
-                            label="Remove"
-                            mode="outlined"
-                            onPress={deleteUploadedImage}
-                            style={{ flex: 1, marginLeft: 8 }}
-                            textColor={theme.colors.error}
+                    <View style={styles.row}>
+                        <View style={[styles.amountInput, { flex: 2 }]}>
+                            <TextInput
+                                label="Amount *"
+                                value={expense.amount?.toString() ?? ''}
+                                onChangeText={(text) => updateField('amount', text.replace(/[^0-9.]/g, ''))}
+                                keyboardType="decimal-pad"
+                            />
+                        </View>
+                        {/* <View style={[styles.dropdownContainer, { flex: 1, marginLeft: 8 }]}>
+                            <Text style={styles.inputLabel}>Currency</Text>
+                            <Dropdown
+                                value={expense.currency || 'PKR'}
+                                options={CURRENCIES}
+                                onSelect={(value) => updateField('currency', value)}
+                            />
+                        </View> */}
+                    </View>
+
+                    <View style={styles.row}>
+                        <View style={[styles.categoryContainer, { flex: 1, marginRight: 8 }]}>
+                            <Text style={styles.inputLabel}>Category *</Text>
+                            <TouchableOpacity
+                                style={[
+                                    styles.categoryButton,
+                                    expense.category && styles.categoryButtonActive
+                                ]}
+                                onPress={() => setShowCategoryPicker(true)}
+                            >
+                                <Text style={[
+                                    styles.categoryButtonText,
+                                    { color: expense.category ? theme.colors.primary : theme.colors.onSurfaceVariant }
+                                ]}>
+                                    {expense.category || 'Select Category'}
+                                </Text>
+                                <Icon
+                                    source="chevron-down"
+                                    size={20}
+                                    color={expense.category ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                                />
+                            </TouchableOpacity>
+
+                            <Modal
+                                visible={showCategoryPicker}
+                                animationType="slide"
+                                transparent={true}
+                                onRequestClose={() => setShowCategoryPicker(false)}
+                            >
+                                <TouchableWithoutFeedback onPress={() => setShowCategoryPicker(false)}>
+                                    <View style={styles.modalOverlay} />
+                                </TouchableWithoutFeedback>
+
+                                <View style={[styles.modalContent, { backgroundColor: theme.colors.background }]}>
+                                    <View style={styles.modalHeader}>
+                                        <Text variant="titleMedium">Select Category</Text>
+                                        <TouchableOpacity onPress={() => setShowCategoryPicker(false)}>
+                                            <Icon source="close" size={24} />
+                                        </TouchableOpacity>
+                                    </View>
+                                    <Divider />
+                                    <ScrollView style={styles.categoriesList}>
+                                        {EXPENSE_CATEGORIES.map((category) => (
+                                            <TouchableOpacity
+                                                key={category.value}
+                                                style={styles.categoryItem}
+                                                onPress={() => {
+                                                    updateField('category', category.value);
+                                                    setShowCategoryPicker(false);
+                                                }}
+                                            >
+                                                <Text>{category.label}</Text>
+                                                {expense.category === category.value && (
+                                                    <Icon source="check" size={20} color={theme.colors.primary} />
+                                                )}
+                                            </TouchableOpacity>
+                                        ))}
+                                    </ScrollView>
+                                </View>
+                            </Modal>
+                        </View>
+                        {/* <View style={[styles.dropdownContainer, { flex: 1 }]}>
+                            <Text style={styles.inputLabel}>Payment Method</Text>
+                            <Dropdown
+                                options={PAYMENT_METHODS}
+                                value={expense.payment_method || 'Cash'}
+                                onSelect={(value) => updateField('payment_method', value)}
+                            />
+                            </View>
+                            <View style={[styles.dropdownContainer, { flex: 1 }]}>
+                            <Text style={styles.inputLabel}>Status</Text>
+                            Dropdown
+                                label="Status"
+                                options={EXPENSE_STATUSES}
+                                value={expense.status}
+                                onSelect={(v) => updateField("status", v)}
+                            /> 
+                        </View>
+                        </View> */}
+                    </View>
+
+                    <Text variant="titleMedium" style={[styles.sectionTitle, { marginTop: 16 }]}>Additional Information</Text>
+
+                    <View style={styles.dateTimeContainer}>
+                        <Text style={styles.inputLabel}>Date & Time</Text>
+                        <DateTimeSelector
+                            value={spentAt}
+                            onChange={setSpentAt}
+                            style={styles.dateTimeInput}
                         />
-                    )}
-                </View>
+                    </View>
 
-                {image && !expense.receipt_url && (
-                    <Button
-                        label={isUploading ? 'Uploading...' : 'Upload Receipt'}
-                        mode="contained"
-                        onPress={uploadImage}
-                        loading={isUploading}
-                        style={{ marginBottom: 16 }}
+                    {/* <TextInput
+                        label="Merchant"
+                        value={expense?.merchant_name ?? ''}
+                        onChangeText={(text) => updateField('merchant_name', text)}
+                        style={styles.input}
+                    /> */}
+
+                    {/* <TextInput
+                        label="Location"
+                        value={expense?.location ?? ''}
+                        onChangeText={(text) => updateField('location', text)}
+                        style={styles.input}
+                    /> */}
+
+                    {/* <TextInput
+                        label="Paid By"
+                        value={expense?.paid_by ?? ''}
+                        onChangeText={(text) => updateField('paid_by', text)}
+                        style={styles.input}
+                    /> */}
+
+                    {/* <TextInput
+                        label="Tags (comma separated)"
+                        value={expense?.tags ?? ''}
+                        onChangeText={(text) => updateField('tags', text)}
+                        style={styles.input}
+                    /> */}
+
+                    <TextInput
+                        label="Notes"
+                        value={expense?.notes ?? ''}
+                        onChangeText={(text) => updateField('notes', text)}
+                        multiline
+                        numberOfLines={3}
+                        style={[styles.input, styles.textArea]}
                     />
-                )}
 
+                    <View style={styles.receiptContainer}>
+                        <Text variant="titleMedium" style={styles.sectionTitle}>Receipt</Text>
+                        {image?.uri && (
+                            <Image
+                                source={{ uri: image.uri }}
+                                // style={{
+                                //     width: '100%',
+                                //     height: 200,
+                                //     marginVertical: 16,
+                                //     borderRadius: 8,
+                                // }}
+                                style={styles.imagePreview}
+                                resizeMode="contain"
+                            />
+                        )}
+                        <Button
+                            label={image ? 'Change Image' : 'Select Receipt'}
+                            mode="outlined"
+                            onPress={pickImage}
+                            style={globalStyles.buttons.secondary}
+                        />
+                        {image && (
+                            <View style={styles.imagePreviewContainer}>
+                                {/* <Image source={{ uri: image }} style={styles.imagePreview} /> */}
+                                <Button
+                                    label="Remove Receipt"
+                                    mode="outlined"
+                                    onPress={removeImage}
+                                    // style={styles.removeImageButton}
+                                    style={globalStyles.buttons.secondary}
+                                    textStyle={{ color: theme.colors.error }}
+                                />
+                            </View>
+                        )}
+
+                        {image && !expense.receipt_url && (
+                            <Button
+                                label={isUploading ? 'Uploading...' : 'Upload Receipt'}
+                                mode="outlined"
+                                onPress={uploadImage}
+                                icon="camera"
+                                loading={isUploading}
+                                style={globalStyles.buttons.secondary}
+                            />
+                        )}
+                    </View>
+                </View>
+            </ScrollView>
+
+            <View style={styles.footer}>
                 <Button
                     label={isSubmitting ? 'Saving...' : 'Save Expense'}
                     mode="contained"
                     onPress={handleSave}
                     loading={isSubmitting}
-                    style={{ marginTop: 8, marginBottom: 32 }}
+                    style={styles.submitButton}
                 />
             </View>
-        </ScrollView>
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        flex: 1,
+        backgroundColor: theme.colors.background,
+    },
+    scrollView: {
+        flex: 1,
+    },
+    scrollContent: {
+        padding: 16,
+        paddingBottom: 100,
+    },
+    formGroup: {
+        marginBottom: 24,
+    },
+    sectionTitle: {
+        marginBottom: 16,
+        color: theme.colors.primary,
+        fontWeight: '500',
+    },
+    input: {
+        marginBottom: 16,
+    },
+    inputLabel: {
+        fontSize: 12,
+        marginBottom: 4,
+        color: theme.colors.onSurfaceVariant,
+    },
+    row: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        marginBottom: 16,
+    },
+    amountInput: {
+        marginRight: 8,
+    },
+    categoryContainer: {
+        marginBottom: 16,
+    },
+    categoryButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        borderWidth: 1,
+        borderColor: theme.colors.outline,
+        borderRadius: 4,
+        paddingHorizontal: 12,
+        paddingVertical: 8,
+        minHeight: 56,
+        backgroundColor: theme.colors.surface,
+    },
+    categoryButtonActive: {
+        borderColor: theme.colors.primary,
+    },
+    categoryButtonText: {
+        fontSize: 16,
+    },
+    modalOverlay: {
+        flex: 1,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    },
+    modalContent: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        maxHeight: '60%',
+        borderTopLeftRadius: 16,
+        borderTopRightRadius: 16,
+        padding: 16,
+    },
+    modalHeader: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 4,
+    },
+    categoriesList: {
+        maxHeight: 300,
+    },
+    categoryItem: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        paddingVertical: 16,
+        paddingHorizontal: 8,
+        borderBottomWidth: 1,
+        borderBottomColor: theme.colors.outlineVariant,
+    },
+    dateTimeContainer: {
+        marginBottom: 16,
+    },
+    dateTimeInput: {
+        borderWidth: 1,
+        borderColor: theme.colors.outline,
+        borderRadius: 4,
+        padding: 12,
+    },
+    textArea: {
+        minHeight: 100,
+        textAlignVertical: 'top',
+        paddingTop: 12,
+    },
+    receiptContainer: {
+        marginTop: 8,
+        marginBottom: 24,
+    },
+    uploadButton: {
+        borderStyle: 'dashed',
+        borderColor: theme.colors.primary,
+        borderWidth: 1,
+    },
+    imagePreviewContainer: {
+        alignItems: 'center',
+        marginTop: 8,
+    },
+    imagePreview: {
+        width: '100%',
+        height: 200,
+        borderRadius: 8,
+        marginBottom: 12,
+        resizeMode: 'contain',
+        backgroundColor: theme.colors.surfaceVariant,
+    },
+    removeImageButton: {
+        borderColor: theme.colors.error,
+    },
+    footer: {
+        position: 'absolute',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: 16,
+        backgroundColor: theme.colors.background,
+        borderTopWidth: 1,
+        borderTopColor: theme.colors.outlineVariant,
+        elevation: 4,
+    },
+    submitButton: {
+        width: '100%',
+    },
+});

@@ -3,33 +3,38 @@ export type RootStackParamList = {
     Login: undefined;
     Home: undefined;
 
+    // Navigation containers
+    MainTabs: undefined;
+
+
+    // Profile
+    Profile: undefined;
+    EditProfile: undefined;
+
+    // Folders
     FoldersList: undefined;
-    FolderDetails: { groupId: number };
+    CreateFolderScreen: undefined;
+    FolderDetails: { folderId: number };
 
 
 
-
+    // Files
     FilesTab: undefined; // temp
-    FileDetail: { fileId: number };
+    FileDetail: {
+        fileId: number
+        folderId: number
+    };
+
+    AddExpense: {
+        fileId: number
+        folderId: number
+    };
+
+
     AddFileMember: { fileId: number };
 
 
-
-
-
-    CreateExpenseGroup: undefined;
-
-
-
-
-
-
-
     GroupList: undefined;
-    // ExpenseList: {
-    //     groupId: number;
-    //     // groupName: string
-    // };
 
     AddGroup: undefined;
     GroupDetail: { groupId: number };
@@ -39,17 +44,14 @@ export type RootStackParamList = {
 
     AddMember: { groupId: number }; // <-- add this if you have an AddMember screen
 
-    // Navigation containers
-    MainTabs: undefined;
 
 
-    // ExpenseList: { groupId: number | undefined };
-    // AddExpense: { groupId: number | undefined };
-    ExpenseList: { groupId?: number };
-    AddExpense: { fileId?: number };
-    EditExpense: { 
+
+    // Expenses
+    // ExpenseList: { groupId?: number };
+    EditExpense: {
         expenseId: number
         fileId: number
-     };
+    };
     ExpenseDetail: { expenseId: number };
 };

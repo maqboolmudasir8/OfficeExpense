@@ -1,7 +1,9 @@
 import React from "react";
 import { Button } from "./Button";
 import { Animated, Easing, StyleSheet, View } from "react-native";
-import { Dialog as RNPDialog, Portal, Text, IconButton } from "react-native-paper";
+import { Dialog as RNPDialog, Portal, IconButton } from "react-native-paper";
+import { Text } from "./Text";
+import { globalStyles } from "../styles/globalStyles";
 
 export interface DialogProps {
     visible: boolean;
@@ -124,7 +126,8 @@ export default function Dialog({
                                 onPress={onCancel}
                                 disabled={loading}
                                 mode="outlined"
-                                style={{ marginRight: 8 }}
+                                // style={{ marginRight: 8 }}
+                                style={globalStyles.buttons.secondary}
                                 label={cancelLabel}
                             />
 
@@ -133,8 +136,9 @@ export default function Dialog({
                                     onPress={onConfirm}
                                     loading={loading}
                                     mode="contained"
-                                    buttonColor={finalConfirmColor}
+                                    buttonColor={finalConfirmColor ?? undefined}
                                     label={confirmLabel}
+                                    style={globalStyles.buttons.primary}
                                 />
                             )}
                         </RNPDialog.Actions>

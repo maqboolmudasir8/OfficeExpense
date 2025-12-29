@@ -1,25 +1,27 @@
 import { supabase } from "./supabaseClient";
-import { Folder, FolderMember, PermissionLevel } from "../types/Folder";
+import { EditableFolderInputModel, Folder, FolderMember, FolderStatus, PermissionLevel } from "../types/Folder";
 import { handleSupabaseError } from "../utils/handleSupabaseError";
 import { folderMemberService } from "./folderMemberService";
 
 export const folderService = {
 
-    async fetchGroups(): Promise<Folder[]> {
+    async fetchFolders(): Promise<Folder[]> {
         const { data, error } = await supabase
             .from("folders")
             .select("*")
+            .neq("status", FolderStatus.Archived)  // <-- filter out archived folders
             .order("updated_at", { ascending: false });
 
         if (error) handleSupabaseError(error);
         return data || [];
     },
 
-    async fetchGroupsByUserId(userId: string): Promise<Folder[]> {
+    async fetchFoldersByUserId(userId: string): Promise<Folder[]> {
         const { data: createdFolders, error: err1 } = await supabase
             .from("folders")
             .select("*")
             .eq("created_by", userId)
+            .neq("status", FolderStatus.Archived)  // <-- filter out archived
             .order("updated_at", { ascending: false });
 
         if (err1) handleSupabaseError(err1);
@@ -39,6 +41,7 @@ export const folderService = {
                 .from("folders")
                 .select("*")
                 .in("id", folderIds)
+                .neq("status", FolderStatus.Archived)  // <-- filter out archived
                 .order("updated_at", { ascending: false });
 
             if (err3) handleSupabaseError(err3);
@@ -55,52 +58,74 @@ export const folderService = {
     },
 
 
-    async fetchGroupDetails(groupId: number): Promise<Folder> {
+    async fetchFolderDetails(folderId: number): Promise<Folder> {
         const { data, error } = await supabase
             .from("folders")
             .select("*")
-            .eq("id", groupId)
+            .eq("id", folderId)
             .single();
 
         if (error) handleSupabaseError(error);
         return data;
     },
 
-    async createGroup(payload: Partial<Folder>): Promise<Folder> {
-        // Create the folder
-        const { data, error } = await supabase
+    async createFolder(payload: Partial<EditableFolderInputModel>): Promise<Folder> {
+        console.log("payload____createFolder", payload);
+
+        // --- CREATE FOLDER ---
+        const { data: folderData, error: folderError } = await supabase
             .from("folders")
             .insert(payload)
-            .select()
+            .select('*')
             .single();
 
-        if (error) handleSupabaseError(error);
+        if (folderError) {
+            handleSupabaseError(folderError); // optional logging
+            console.error("Error creating folder:", folderError);
+            throw folderError;
+        }
 
-        // Add the creator as an admin member of the folder
+        console.log("folderData____createFolder", folderData);
+
+        // --- ADD CREATOR AS FOLDER MEMBER ---
         try {
-            if (data && payload.created_by) {
+            if (folderData && payload.created_by) {
+                // Get creator user info
+                const { data: userData, error: userError } = await supabase
+                    .from('users')
+                    .select('id, email, full_name')
+                    .eq('id', payload.created_by)
+                    .single();
+
+                if (userError || !userData) {
+                    console.error('Error fetching creator info:', userError);
+                    // Don't fail folder creation if user lookup fails
+                    return folderData;
+                }
+
                 await folderMemberService.addMember(
-                    data.id,
+                    folderData.id,
+                    userData?.email,
+                    PermissionLevel.Contributor,
                     payload.created_by,
-                    'Contributor' as PermissionLevel
                 );
             }
         } catch (error) {
             console.error('Error adding creator as folder member:', error);
-            // Don't fail the whole operation if adding member fails
+            // Do not throw, folder creation succeeded
         }
 
-        return data;
+        return folderData;
     },
 
-    async updateGroup(groupId: number, updates: Partial<Folder>): Promise<Folder> {
+    async updateFolder(folderId: number, updates: Partial<Folder>): Promise<Folder> {
         const { data, error } = await supabase
             .from("folders")
             .update({
                 ...updates,
                 updated_at: new Date().toISOString()
             })
-            .eq("id", groupId)
+            .eq("id", folderId)
             .select()
             .single();
 
@@ -108,25 +133,25 @@ export const folderService = {
         return data;
     },
 
-    async archiveGroup(groupId: number): Promise<boolean> {
+    async archiveFolder(folderId: number): Promise<boolean> {
         const { error } = await supabase
             .from("folders")
             .update({
-                status: "Archived",
+                status: FolderStatus.Archived.toString(),
                 updated_at: new Date().toISOString()
             })
-            .eq("id", groupId);
+            .eq("id", folderId);
 
         if (error) handleSupabaseError(error);
         return true;
     },
 
-    async deleteGroup(groupId: number): Promise<boolean> {
+    async deleteFolder(folderId: number): Promise<boolean> {
         // First, delete related records in folder_members table
         const { error: membersError } = await supabase
             .from("folder_members")
             .delete()
-            .eq("folder_id", groupId);
+            .eq("folder_id", folderId);
 
         if (membersError) handleSupabaseError(membersError);
 
@@ -134,7 +159,7 @@ export const folderService = {
         const { error } = await supabase
             .from("folders")
             .delete()
-            .eq("id", groupId);
+            .eq("id", folderId);
 
         if (error) handleSupabaseError(error);
         return true;

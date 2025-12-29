@@ -138,6 +138,8 @@ export async function fetchMonthlyTotals(fileId: number) {
 
 
 export async function fetchFilteredExpenses(filters: ExpenseFilters) {
+    console.log("filters___fetchFilteredExpenses", filters);
+
     let query = supabase.from("expenses").select("*");
 
     if (filters.fileId && filters.fileId > 0)

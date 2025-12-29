@@ -1,85 +1,99 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
-import { Card, Text, useTheme } from "react-native-paper";
-import { File, FileStatus } from "../../../types/File";
+import { Card, useTheme, IconButton, Avatar } from "react-native-paper";
+import { File, FileStatus, FileVisibility } from "../../../types/File";
+import { Text } from "../../../components/Text";
 
 interface FileCardProps {
     file: File;
     onPress: () => void;
-    onLongPress: () => void;
+    onMenuPress: () => void; // renamed for clarity
 }
 
-export const FileCard: React.FC<FileCardProps> = ({ file, onPress, onLongPress }) => {
+export const FileCard: React.FC<FileCardProps> = ({ file, onPress, onMenuPress }) => {
     const theme = useTheme();
 
-    const statusColor =
-        file.status === FileStatus.Active
-            ? theme.colors.primary
-            : theme.colors.error;
+    const statusColor = file.status === FileStatus.Active
+        ? theme.colors.primary
+        : theme.colors.error;
 
     return (
-        <Card style={styles.card} onPress={onPress} onLongPress={onLongPress}>
-            <Card.Content>
-
-                {/* Title */}
+        <Card
+            style={[styles.card, { backgroundColor: theme.colors.surface }]}
+            onPress={onPress}
+        >
+            <Card.Content style={styles.cardContent}>
                 <View style={styles.header}>
-                    <Text variant="titleMedium" numberOfLines={1} style={styles.title}>
-                        {file.title}
-                    </Text>
+                    <View style={styles.titleContainer}>
+                        <Avatar.Icon
+                            size={40}
+                            icon='file-document-edit'
+                            style={[
+                                styles.avatar,
+                                { backgroundColor: theme.colors.primaryContainer }
+                            ]}
+                            color={theme.colors.onPrimaryContainer}
+                        />
+                        <View style={styles.titleWrapper}>
+                            <Text
+                                variant="titleMedium"
+                                style={[styles.title, { color: theme.colors.onSurface }]}
+                                numberOfLines={1}
+                            >
+                                {file.title}
+                            </Text>
+                            {file.description && (
+                                <Text
+                                    variant="bodyMedium"
+                                    style={[styles.description, { color: theme.colors.onSurfaceVariant }]}
+                                    numberOfLines={2}
+                                >
+                                    {file.description}
+                                </Text>
+                            )}
+                        </View>
+                    </View>
+                    <IconButton
+                        icon="dots-vertical"
+                        size={20}
+                        onPress={onMenuPress}
+                        style={styles.menuButton}
+                    />
                 </View>
 
-                {/* Description */}
-                {file.description ? (
-                    <Text variant="bodyMedium" numberOfLines={2} style={styles.description}>
-                        {file.description}
-                    </Text>
-                ) : null}
-
-                {/* Tags: Status + Visibility */}
-                <View style={styles.tagsRow}>
-                    {file.status && (
-                        <Text
-                            variant="labelSmall"
-                            style={[styles.tag, { color: statusColor }]}
-                        >
-                            {file.status}
-                        </Text>
-                    )}
-
-                    {file.visibility && (
-                        <Text
-                            variant="labelSmall"
-                            style={[styles.tag, { color: theme.colors.secondary }]}
-                        >
-                            {file.visibility}
-                        </Text>
-                    )}
-                </View>
-
-                {/* Footer metadata */}
                 <View style={styles.footer}>
-
-                    <Text variant="labelSmall">
-                        Created at: {file.created_at ? new Date(file.created_at).toLocaleDateString() : "-"}
-                    </Text>
-
-
-                    <Text variant="labelSmall">
-                        Created by: {file.created_by ? file.created_by : ""}
-
-                    </Text>
-                    {file.updated_at && (
-                        <Text variant="labelSmall">
-                            Updated at: {file.updated_at ? new Date(file.updated_at).toLocaleDateString() : "-"}
+                    <View style={styles.metaContainer}>
+                        <Text
+                            variant="labelSmall"
+                            style={[styles.metaText, { color: theme.colors.onSurfaceVariant }]}
+                        >
+                            {file.created_at && new Date(file.created_at).toLocaleDateString()}
                         </Text>
-                    )}
-
-                    {file.updated_by && (
-                        <Text variant="labelSmall">
-                            Updated by: {file.updated_by ? file.updated_by : ""}
-                        </Text>
-                    )}
-
+                        {file.visibility && (
+                            <Text
+                                variant="labelSmall"
+                                style={[styles.metaText, { color: theme.colors.onSurfaceVariant }]}
+                            >
+                                • {file.visibility}
+                            </Text>
+                        )}
+                        {file.status && (
+                            <View style={[styles.statusBadge, { backgroundColor: `${statusColor}20` }]}>
+                                <Text
+                                    variant="labelSmall"
+                                    style={[styles.statusText, { color: statusColor }]}
+                                >
+                                    {file.status}
+                                </Text>
+                            </View>
+                        )}
+                    </View>
+                    <IconButton
+                        icon="chevron-right"
+                        size={24}
+                        onPress={onPress}
+                        style={styles.arrowIcon}
+                    />
                 </View>
             </Card.Content>
         </Card>
@@ -87,15 +101,76 @@ export const FileCard: React.FC<FileCardProps> = ({ file, onPress, onLongPress }
 };
 
 const styles = StyleSheet.create({
-    card: { marginBottom: 8 },
-    header: { flexDirection: "row", justifyContent: "space-between", marginBottom: 6 },
-    title: { fontWeight: "bold" },
-    description: { color: "#666", marginBottom: 6 },
-    tagsRow: { flexDirection: "row", gap: 12, marginBottom: 6 },
-    tag: { fontWeight: "bold" },
+    card: {
+        marginBottom: 12,
+        marginHorizontal: 4,
+        borderRadius: 8,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.1,
+        shadowRadius: 2,
+    },
+    cardContent: {
+        padding: 12,
+    },
+    header: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'flex-start',
+        marginBottom: 8,
+    },
+    titleContainer: {
+        flexDirection: 'row',
+        flex: 1,
+        alignItems: 'flex-start',
+    },
+    avatar: {
+        marginRight: 12,
+    },
+    titleWrapper: {
+        flex: 1,
+        marginRight: 8,
+    },
+    title: {
+        fontWeight: '500',
+        marginBottom: 4,
+    },
+    description: {
+        opacity: 0.8,
+    },
+    menuButton: {
+        margin: -8,
+    },
     footer: {
-        flexDirection: "column",
-        marginTop: 4,
-        gap: 2,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        marginTop: 8,
+        paddingTop: 8,
+        borderTopWidth: 1,
+        borderTopColor: 'rgba(0, 0, 0, 0.08)',
+    },
+    metaContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        flex: 1,
+    },
+    metaText: {
+        marginRight: 8,
+        opacity: 0.7,
+    },
+    statusBadge: {
+        borderRadius: 4,
+        paddingHorizontal: 6,
+        paddingVertical: 2,
+        marginRight: 8,
+    },
+    statusText: {
+        fontWeight: '500',
+    },
+    arrowIcon: {
+        margin: -8,
     },
 });

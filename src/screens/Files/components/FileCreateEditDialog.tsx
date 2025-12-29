@@ -1,10 +1,10 @@
 import React from "react";
 import { View, StyleSheet } from "react-native";
 import { File, statusOptions, visibilityOptions } from "../../../types/File";
-import TextInput from "../../../components/TextInput";
+import { TextInput } from "../../../components/TextInput";
 import Dialog from "../../../components/Dialog";
 import { useTheme } from "react-native-paper";
-import Dropdown from "../../../components/Dropdown"; // <-- Your dropdown component
+import { Dropdown } from "../../../components/Dropdown";
 
 interface FileCreateEditDialogProps {
     visible: boolean;
@@ -22,7 +22,7 @@ export const FileCreateEditDialog: React.FC<FileCreateEditDialogProps> = ({ visi
         <Dialog
             visible={visible}
             title={isEdit ? "Edit File" : "New File"}
-            confirmLabel={isEdit ? "Update" : "Create"}
+            confirmLabel={isEdit ? "Update" : "Add"}
             cancelLabel="Cancel"
             icon="file-document-edit"
             onCancel={onCancel}
@@ -32,7 +32,7 @@ export const FileCreateEditDialog: React.FC<FileCreateEditDialogProps> = ({ visi
                 <TextInput
                     label="Title"
                     mode="outlined"
-                    value={form.title}
+                    value={form?.title ?? ''}
                     onChangeText={(v) => onChange("title", v)}
                 />
             </View>
@@ -49,24 +49,24 @@ export const FileCreateEditDialog: React.FC<FileCreateEditDialogProps> = ({ visi
             </View>
 
             {/* Status */}
-            <View style={{ marginBottom: 12 }}>
+            {/* <View style={{ marginBottom: 12 }}>
                 <Dropdown
                     label="Status"
                     value={form.status?.toString() ?? ""}
                     options={statusOptions}
                     onSelect={(value) => onChange("status", value ?? "")}
                 />
-            </View>
+            </View> */}
 
             {/* Visibility */}
-            <View style={{ marginBottom: 12 }}>
+            {/* <View style={{ marginBottom: 12 }}>
                 <Dropdown
                     label="Visibility"
                     value={form.visibility?.toString() ?? ""}
                     options={visibilityOptions}
                     onSelect={(value) => onChange("visibility", value ?? "")}
                 />
-            </View>
+            </View> */}
         </Dialog>
     );
 };

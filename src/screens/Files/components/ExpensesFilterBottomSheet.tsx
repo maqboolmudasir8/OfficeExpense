@@ -5,7 +5,7 @@ import DateTimePicker, { DateTimePickerEvent } from "@react-native-community/dat
 import { ExpenseFilters } from '../../../types/Expense';
 import { EXPENSE_CATEGORIES } from '../../../constants/expenseOptions';
 import { format } from 'date-fns';
-import TextInput from '../../../components/TextInput';
+import { TextInput } from '../../../components/TextInput';
 import { theme } from '../../../theme';
 
 interface ExpensesFilterBottomSheetProps {
@@ -167,49 +167,39 @@ export const ExpensesFilterBottomSheet: React.FC<ExpensesFilterBottomSheetProps>
                             <Text variant="labelLarge" style={styles.sectionTitle}>Amount Range</Text>
                             <View style={styles.amountRow}>
                                 <View style={styles.amountInputContainer}>
-                                    <Text variant="labelSmall" style={styles.amountLabel}>Min</Text>
-                                    <View style={[
-                                        styles.amountInput,
-                                        { borderColor: theme.colors.outline }
-                                    ]}>
-                                        <Text style={styles.currencySymbol}>$</Text>
-                                        <TextInput
-                                            style={styles.amountTextInput}
-                                            label='Min'
-                                            keyboardType="numeric"
-                                            value={filters.minAmount?.toString()}
-                                            onChangeText={(t) =>
-                                                setFilters(prev => ({
-                                                    ...prev,
-                                                    minAmount: t ? parseFloat(t) : undefined,
-                                                }))
-                                            }
-                                        />
-                                    </View>
+                                    <TextInput
+                                        mode="outlined"
+                                        label="Min"
+                                        prefix="$"
+                                        keyboardType="numeric"
+                                        value={filters.minAmount?.toString() ?? ''}
+                                        onChangeText={(t) =>
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                minAmount: t ? parseFloat(t) : undefined,
+                                            }))
+                                        }
+                                        style={styles.amountInput}
+                                    />
                                 </View>
 
                                 <View style={styles.amountSeparator} />
 
                                 <View style={styles.amountInputContainer}>
-                                    <Text variant="labelSmall" style={styles.amountLabel}>Max</Text>
-                                    <View style={[
-                                        styles.amountInput,
-                                        { borderColor: theme.colors.outline }
-                                    ]}>
-                                        <Text style={styles.currencySymbol}>$</Text>
-                                        <TextInput
-                                            style={styles.amountTextInput}
-                                            label='Max'
-                                            keyboardType="numeric"
-                                            value={filters.maxAmount?.toString()}
-                                            onChangeText={(t) =>
-                                                setFilters(prev => ({
-                                                    ...prev,
-                                                    maxAmount: t ? parseFloat(t) : undefined,
-                                                }))
-                                            }
-                                        />
-                                    </View>
+                                    <TextInput
+                                        mode="outlined"
+                                        label="Max"
+                                        prefix="$"
+                                        keyboardType="numeric"
+                                        value={filters.maxAmount?.toString() ?? ''}
+                                        onChangeText={(t) =>
+                                            setFilters(prev => ({
+                                                ...prev,
+                                                maxAmount: t ? parseFloat(t) : undefined,
+                                            }))
+                                        }
+                                        style={styles.amountInput}
+                                    />
                                 </View>
                             </View>
                         </View>
@@ -220,107 +210,51 @@ export const ExpensesFilterBottomSheet: React.FC<ExpensesFilterBottomSheetProps>
                         <View style={styles.section}>
                             <Text variant="labelLarge" style={styles.sectionTitle}>Sort By</Text>
                             <View style={styles.sortOptions}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.sortOption,
-                                        filters.sortBy === 'spent_at' && styles.sortOptionActive
-                                    ]}
-                                    onPress={() => setFilters(prev => ({ ...prev, sortBy: 'spent_at' }))}
-                                >
-                                    <Icon
-                                        source="sort-calendar-ascending"
-                                        size={20}
-                                        color={filters.sortBy === 'spent_at' ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                                    />
-                                    <Text style={[
-                                        styles.sortOptionText,
-                                        { color: filters.sortBy === 'spent_at' ? theme.colors.primary : theme.colors.onSurface }
-                                    ]}>
-                                        Date
-                                    </Text>
-                                </TouchableOpacity>
+                                {[
+                                    { key: 'spent_at', icon: 'calendar' },
+                                    { key: 'amount', icon: 'currency-usd' },
+                                    { key: 'category', icon: 'tag-outline' }
+                                ].map(({ key, icon }) => {
+                                    const isActive = filters.sortBy === key;
+                                    const isAsc = filters.sortOrder === 'asc';
 
-                                <TouchableOpacity
-                                    style={[
-                                        styles.sortOption,
-                                        filters.sortBy === 'amount' && styles.sortOptionActive
-                                    ]}
-                                    onPress={() => setFilters(prev => ({ ...prev, sortBy: 'amount' }))}
-                                >
-                                    <Icon
-                                        source="sort-numeric-ascending"
-                                        size={20}
-                                        color={filters.sortBy === 'amount' ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                                    />
-                                    <Text style={[
-                                        styles.sortOptionText,
-                                        { color: filters.sortBy === 'amount' ? theme.colors.primary : theme.colors.onSurface }
-                                    ]}>
-                                        Amount
-                                    </Text>
-                                </TouchableOpacity>
+                                    return (
+                                        <TouchableOpacity
+                                            key={key}
+                                            style={[
+                                                styles.sortOption,
+                                                isActive && styles.sortOptionActive
+                                            ]}
+                                            onPress={() => {
+                                                // Toggle sort order if clicking the same field, otherwise default to 'desc'
+                                                const newOrder = isActive
+                                                    ? (isAsc ? 'desc' : 'asc')
+                                                    : 'desc';
 
-                                <TouchableOpacity
-                                    style={[
-                                        styles.sortOption,
-                                        filters.sortBy === 'category' && styles.sortOptionActive
-                                    ]}
-                                    onPress={() => setFilters(prev => ({ ...prev, sortBy: 'category' }))}
-                                >
-                                    <Icon
-                                        source="sort-alphabetical-ascending"
-                                        size={20}
-                                        color={filters.sortBy === 'category' ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                                    />
-                                    <Text style={[
-                                        styles.sortOptionText,
-                                        { color: filters.sortBy === 'category' ? theme.colors.primary : theme.colors.onSurface }
-                                    ]}>
-                                        Category
-                                    </Text>
-                                </TouchableOpacity>
-                            </View>
-
-                            <View style={styles.sortOrder}>
-                                <TouchableOpacity
-                                    style={[
-                                        styles.sortOrderButton,
-                                        filters.sortOrder === 'asc' && styles.sortOrderButtonActive
-                                    ]}
-                                    onPress={() => setFilters(prev => ({ ...prev, sortOrder: 'asc' }))}
-                                >
-                                    <Icon
-                                        source="sort-ascending"
-                                        size={20}
-                                        color={filters.sortOrder === 'asc' ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                                    />
-                                    <Text style={[
-                                        styles.sortOrderText,
-                                        { color: filters.sortOrder === 'asc' ? theme.colors.primary : theme.colors.onSurface }
-                                    ]}>
-                                        Ascending
-                                    </Text>
-                                </TouchableOpacity>
-
-                                <TouchableOpacity
-                                    style={[
-                                        styles.sortOrderButton,
-                                        filters.sortOrder === 'desc' && styles.sortOrderButtonActive
-                                    ]}
-                                    onPress={() => setFilters(prev => ({ ...prev, sortOrder: 'desc' }))}
-                                >
-                                    <Icon
-                                        source="sort-descending"
-                                        size={20}
-                                        color={filters.sortOrder === 'desc' ? theme.colors.primary : theme.colors.onSurfaceVariant}
-                                    />
-                                    <Text style={[
-                                        styles.sortOrderText,
-                                        { color: filters.sortOrder === 'desc' ? theme.colors.primary : theme.colors.onSurface }
-                                    ]}>
-                                        Descending
-                                    </Text>
-                                </TouchableOpacity>
+                                                setFilters(prev => ({
+                                                    ...prev,
+                                                    sortBy: key as 'spent_at' | 'amount' | 'category',
+                                                    sortOrder: newOrder
+                                                }));
+                                            }}
+                                        >
+                                            <Icon
+                                                source={icon}
+                                                size={24}
+                                                color={isActive ? theme.colors.primary : theme.colors.onSurfaceVariant}
+                                            />
+                                            <View style={styles.sortOrderIndicator}>
+                                                {isActive && (
+                                                    <Icon
+                                                        source={isAsc ? 'arrow-up' : 'arrow-down'}
+                                                        size={16}
+                                                        color={theme.colors.primary}
+                                                    />
+                                                )}
+                                            </View>
+                                        </TouchableOpacity>
+                                    );
+                                })}
                             </View>
                         </View>
                     </View>
@@ -525,6 +459,7 @@ const styles = StyleSheet.create({
     amountRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        marginTop: 8,
     },
     amountInputContainer: {
         flex: 1,
@@ -534,12 +469,7 @@ const styles = StyleSheet.create({
         color: '#666',
     },
     amountInput: {
-        flexDirection: 'row',
-        alignItems: 'center',
-        borderWidth: 1,
-        borderRadius: 4,
-        paddingHorizontal: 10,
-        height: 36,
+        backgroundColor: 'transparent',
     },
     currencySymbol: {
         fontSize: 16,
@@ -554,27 +484,24 @@ const styles = StyleSheet.create({
     },
     amountSeparator: {
         width: 16,
-        height: 1,
-        backgroundColor: '#e0e0e0',
-        marginHorizontal: 8,
     },
     sortOptions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 12,
+        marginTop: 8,
     },
     sortOption: {
         flex: 1,
         alignItems: 'center',
-        padding: 6,
-        borderRadius: 4,
-        borderWidth: 1,
-        borderColor: '#e0e0e0',
-        marginHorizontal: 2,
+        padding: 8,
+        borderRadius: 8,
+        marginHorizontal: 4,
     },
     sortOptionActive: {
-        borderColor: '#6200ee',
-        backgroundColor: '#f3e5ff',
+        backgroundColor: theme.colors.primaryContainer,
+    },
+    sortOrderIndicator: {
+        marginTop: 4,
     },
     sortOptionText: {
         marginTop: 2,

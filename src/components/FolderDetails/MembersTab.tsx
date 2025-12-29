@@ -1,13 +1,18 @@
 // src/components/FolderDetails/MembersTab.tsx
-import React, { useState } from 'react';
-import { View, StyleSheet, Alert } from 'react-native';
-import { List, Button, TextInput, Menu, Avatar, Chip, Portal, Dialog, Text } from 'react-native-paper';
-import { FolderMember, PermissionLevel } from '../../types/Folder';
-import { folderMemberService } from '../../api/folderMemberService';
+import React, { useContext, useState } from "react";
+import { StyleSheet, View, Alert } from "react-native";
+import { Avatar, IconButton, ActivityIndicator } from "react-native-paper";
+import { FolderMember, PermissionLevel } from "../../types/Folder";
+import { Text } from "../Text";
+import { Button } from "../Button";
+import { Dropdown } from "../Dropdown";
+import { TextInput } from "../TextInput";
+import { AuthContext } from "../../context/AuthContext";
 
 interface MembersTabProps {
     members: FolderMember[];
     currentUserId: string;
+    folderId: number;
     onAddMember: (email: string, permission: PermissionLevel) => Promise<void>;
     onRemoveMember: (member: FolderMember) => Promise<void>;
     onUpdateMember: (member: FolderMember, permission: PermissionLevel) => Promise<void>;
@@ -24,259 +29,199 @@ export const MembersTab: React.FC<MembersTabProps> = ({
     canEdit,
     isLoading = false,
 }) => {
-    console.log('MembersTab rendered with members:', members.length); // Debug log
-
-
-    const [email, setEmail] = useState('');
-    const [permission, setPermission] = useState<PermissionLevel>('Viewer');
+    const { users } = useContext(AuthContext);
+    const [email, setEmail] = useState("");
+    const [permission, setPermission] = useState<PermissionLevel>(PermissionLevel.Contributor);
     const [isAdding, setIsAdding] = useState(false);
-    const [menuVisible, setMenuVisible] = useState(false);
-    const [selectedMember, setSelectedMember] = useState<FolderMember | null>(null);
-    const [permissionDialogVisible, setPermissionDialogVisible] = useState(false);
-    const [newPermission, setNewPermission] = useState<PermissionLevel>('Viewer');
 
-    // In MembersTab component
+    console.log("isLoading____MembersTab", isLoading);
+    console.log("members____MembersTab", members);
+    console.log("users from context____MembersTab", users);
+
     const handleAddMember = async () => {
         if (!email.trim()) {
-            Alert.alert('Error', 'Please enter an email address');
+            Alert.alert("Error", "Please enter an email");
             return;
         }
 
         try {
             setIsAdding(true);
             await onAddMember(email.trim(), permission);
-            setEmail('');
-            setPermission('Viewer');
-            // No need to update local state here as parent will provide updated members
-        } catch (error) {
-            // Error is already handled in the parent
+            setEmail("");
+            setPermission(PermissionLevel.Contributor);
+        } catch (error: any) {
+            Alert.alert("Error", error.message || "Failed to add member");
         } finally {
             setIsAdding(false);
         }
     };
 
+    const renderMemberItem = (member: FolderMember) => {
+        const isCurrentUser = member.user_id === currentUserId;
+        const canEditMember = canEdit && !isCurrentUser;
+        const user = users.find(u => u.id === member.user_id);
+        const userName = user ? `${user.first_name} ${user.last_name}`.trim() : member.user_name || 'Unknown User';
+        const userEmail = user?.email || member.user_email || '';
+        const userInitial = userName[0]?.toUpperCase() || 'U';
 
-    const handleUpdatePermission = async () => {
-        if (!selectedMember) return;
+        const permissionColors = {
+            [PermissionLevel.Viewer]: { bg: "#f5f5f5", color: "#424242" },
+            [PermissionLevel.Contributor]: { bg: "#e3f2fd", color: "#1565c0" },
+            [PermissionLevel.Editor]: { bg: "#e8f5e9", color: "#2e7d32" },
+        };
 
-        try {
-            await onUpdateMember(selectedMember, newPermission);
-            setPermissionDialogVisible(false);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to update permission');
-        }
-    };
+        return (
+            <View key={member.id} style={styles.memberItem}>
+                <Avatar.Text
+                    size={40}
+                    label={userInitial}
+                    style={{ backgroundColor: "#e0e0e0" }}
+                />
 
-    const handleRemoveMember = async () => {
-        if (!selectedMember) return;
+                <View style={styles.memberInfo}>
+                    <Text style={styles.memberName}>{userName}</Text>
+                    <Text style={styles.memberEmail}>{userEmail}</Text>
 
-        try {
-            await onRemoveMember(selectedMember);
-            setMenuVisible(false);
-        } catch (error) {
-            Alert.alert('Error', 'Failed to remove member');
-        }
-    };
+                    {/* <View
+                        style={[
+                            styles.permissionBadge,
+                            { backgroundColor: permissionColors[member.permission_level].bg },
+                        ]}
+                    >
+                        <Text
+                            style={[
+                                styles.permissionText,
+                                { color: permissionColors[member.permission_level].color },
+                            ]}
+                        >
+                            {member.permission_level}
+                        </Text>
+                    </View> */}
+                </View>
 
-    const openPermissionDialog = (member: FolderMember) => {
-        setSelectedMember(member);
-        setNewPermission(member.permission_level);
-        setPermissionDialogVisible(true);
-    };
+                {canEdit && (
+                    <View style={{ flexDirection: "row", alignItems: "center" }}>
+                        {/* <Dropdown
+                            options={[
+                                { label: "Viewer", value: PermissionLevel.Viewer },
+                                { label: "Contributor", value: PermissionLevel.Contributor },
+                                { label: "Editor", value: PermissionLevel.Editor },
+                            ]}
+                            value={member.permission_level}
+                            onSelect={(value) =>
+                                onUpdateMember(member, value as PermissionLevel)
+                            }
+                            style={{ minWidth: 140 }}
+                            mode="outlined"
+                        /> */}
 
-    const openMenu = (member: FolderMember) => {
-        setSelectedMember(member);
-        setMenuVisible(true);
-    };
-
-    const getPermissionColor = (level: PermissionLevel) => {
-        switch (level) {
-            case 'Editor':
-                return '#4caf50';
-            case 'Contributor':
-                return '#2196f3';
-            case 'Viewer':
-                return '#9e9e9e';
-            default:
-                return '#9e9e9e';
-        }
+                        {canEditMember && (
+                            <IconButton
+                                icon="delete"
+                                size={20}
+                                onPress={() => onRemoveMember(member)}
+                                style={styles.actionButton}
+                            />
+                        )}
+                    </View>
+                )}
+            </View>
+        );
     };
 
     return (
         <View style={styles.container}>
-            {/* Add a test view at the top */}
-            <View style={{ padding: 10, backgroundColor: '#f0f0f0' }}>
-                <Text>Members Tab Loaded</Text>
-                <Text>Total members: {members.length}</Text>
-                <Text>Can edit: {canEdit ? 'Yes' : 'No'}</Text>
-            </View>
             {canEdit && (
-                <View style={styles.addMemberContainer}>
+                <View style={styles.section}>
+                    <Text style={styles.sectionTitle}>Add Member</Text>
+
                     <TextInput
-                        label="Add member by email"
+                        label="Email"
                         value={email}
                         onChangeText={setEmail}
-                        style={styles.emailInput}
+                        mode="outlined"
                         autoCapitalize="none"
-                        autoComplete="email"
                         keyboardType="email-address"
-                        disabled={isLoading || isAdding}
                     />
+
+                    {/* <Dropdown
+                        label="Permission Level"
+                        options={[
+                            { label: "Viewer", value: PermissionLevel.Viewer },
+                            { label: "Contributor", value: PermissionLevel.Contributor },
+                            { label: "Editor", value: PermissionLevel.Editor },
+                        ]}
+                        value={permission}
+                        onSelect={(value) => setPermission(value as PermissionLevel)}
+                        style={{ marginTop: 8 }}
+                        mode="outlined"
+                    /> */}
+
                     <Button
+                        label="Add Member"
                         mode="contained"
                         onPress={handleAddMember}
                         loading={isAdding}
-                        disabled={isLoading || isAdding || !email.trim()}
+                        disabled={!email || isAdding}
                         style={styles.addButton}
-                    >
-                        Add
-                    </Button>
+                    />
                 </View>
             )}
 
-            {isLoading ? (
-                <View style={styles.loadingContainer}>
-                    <Text>Loading members...</Text>
-                </View>
-            ) : (
-                <List.Section>
-                    {members.map((member) => (
-                        <List.Item
-                            key={`${member.folder_id}-${member.user_id}`}
-                            title={member.user_name || member.user_email || 'Unknown User'}
-                            description={member.user_email}
-                            left={props => (
-                                <Avatar.Text
-                                    {...props}
-                                    size={40}
-                                    label={member.user_name?.[0]?.toUpperCase() || 'U'}
-                                    style={[props.style, { backgroundColor: getPermissionColor(member.permission_level) }]}
-                                    labelStyle={{ color: 'white' }}
-                                />
-                            )}
-                            right={props =>
-                                canEdit && member.user_id !== currentUserId ? (
-                                    <View style={styles.memberActions}>
-                                        <Chip
-                                            style={[styles.permissionChip, { backgroundColor: getPermissionColor(member.permission_level) }]}
-                                            textStyle={{ color: 'white' }}
-                                            onPress={() => openPermissionDialog(member)}
-                                        >
-                                            {member.permission_level}
-                                        </Chip>
-                                        <Button
-                                            icon="dots-vertical"
-                                            onPress={() => openMenu(member)} children={undefined} />
-                                    </View>
-                                ) : (
-                                    <Chip
-                                        style={[styles.permissionChip, {
-                                            backgroundColor: getPermissionColor(member.permission_level),
-                                            opacity: 0.7
-                                        }]}
-                                        textStyle={{ color: 'white' }}
-                                    >
-                                        {member.permission_level}
-                                    </Chip>
-                                )
-                            }
-                        />
-                    ))}
-                </List.Section>
-            )}
+            <View style={styles.section}>
+                <Text style={styles.sectionTitle}>Team Members</Text>
 
-            <Menu
-                visible={menuVisible}
-                onDismiss={() => setMenuVisible(false)}
-                anchor={{ x: 0, y: 0 }}
-            >
-                <Menu.Item
-                    leadingIcon="pencil"
-                    onPress={() => {
-                        setMenuVisible(false);
-                        if (selectedMember) {
-                            openPermissionDialog(selectedMember);
-                        }
-                    }}
-                    title="Change Permission"
-                />
-                <Menu.Item
-                    leadingIcon="account-remove"
-                    onPress={() => {
-                        handleRemoveMember();
-                    }}
-                    title="Remove Member"
-                />
-            </Menu>
-
-            <Portal>
-                <Dialog
-                    visible={permissionDialogVisible}
-                    onDismiss={() => setPermissionDialogVisible(false)}
-                >
-                    <Dialog.Title>Change Permission</Dialog.Title>
-                    <Dialog.Content>
-                        <Text>Set permission for {selectedMember?.user_name || selectedMember?.user_email}:</Text>
-                        <View style={styles.permissionButtons}>
-                            {(['Viewer', 'Contributor', 'Editor'] as PermissionLevel[]).map((level) => (
-                                <Button
-                                    key={level}
-                                    mode={newPermission === level ? 'contained' : 'outlined'}
-                                    onPress={() => setNewPermission(level)}
-                                    style={styles.permissionButton}
-                                >
-                                    {level}
-                                </Button>
-                            ))}
-                        </View>
-                    </Dialog.Content>
-                    <Dialog.Actions>
-                        <Button onPress={() => setPermissionDialogVisible(false)}>Cancel</Button>
-                        <Button onPress={handleUpdatePermission}>Save</Button>
-                    </Dialog.Actions>
-                </Dialog>
-            </Portal>
+                {isLoading ? (
+                    <View style={styles.loadingContainer}>
+                        <ActivityIndicator size="small" />
+                    </View>
+                ) : members.length > 0 ? (
+                    <View style={styles.memberList}>{members.map(renderMemberItem)}</View>
+                ) : (
+                    <View style={styles.emptyState}>
+                        <Text style={styles.emptyText}>No members added yet</Text>
+                    </View>
+                )}
+            </View>
         </View>
     );
 };
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
+    container: { flex: 1, padding: 16 },
+    section: { marginBottom: 24 },
+    sectionTitle: {
+        fontSize: 16,
+        fontWeight: "600",
+        marginBottom: 12,
+        color: "#333",
     },
-    addMemberContainer: {
-        flexDirection: 'row',
-        padding: 16,
-        alignItems: 'center',
-        gap: 8,
+    memberList: {
+        backgroundColor: "#fff",
+        borderRadius: 8,
+        overflow: "hidden",
     },
-    emailInput: {
-        flex: 1,
+    memberItem: {
+        flexDirection: "row",
+        alignItems: "center",
+        padding: 12,
+        borderBottomWidth: 1,
+        borderBottomColor: "#f0f0f0",
     },
-    addButton: {
-        minWidth: 80,
+    memberInfo: { flex: 1, marginLeft: 12 },
+    memberName: { fontSize: 15, fontWeight: "500", color: "#333" },
+    memberEmail: { fontSize: 13, color: "#666", marginTop: 2 },
+    permissionBadge: {
+        paddingHorizontal: 8,
+        paddingVertical: 4,
+        borderRadius: 4,
+        marginTop: 4,
+        alignSelf: "flex-start",
     },
-    loadingContainer: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
-        padding: 20,
-    },
-    memberActions: {
-        flexDirection: 'row',
-        alignItems: 'center',
-    },
-    permissionChip: {
-        marginRight: 8,
-        height: 32,
-        justifyContent: 'center',
-    },
-    permissionButtons: {
-        flexDirection: 'row',
-        justifyContent: 'space-around',
-        marginTop: 16,
-    },
-    permissionButton: {
-        margin: 4,
-    },
+    permissionText: { fontSize: 12, fontWeight: "500" },
+    emptyState: { padding: 16, alignItems: "center" },
+    emptyText: { color: "#666" },
+    loadingContainer: { padding: 16, alignItems: "center" },
+    addButton: { marginTop: 8 },
+    actionButton: { marginLeft: 12 },
 });

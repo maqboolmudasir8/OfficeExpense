@@ -4,12 +4,15 @@ import { theme } from '../theme';
 
 const { colors, spacing } = theme;
 
-// Layout
+/* -------------------------------- Layout -------------------------------- */
 export const layout = StyleSheet.create({
     container: {
         flex: 1,
         backgroundColor: colors.background,
         padding: spacing.md,
+    },
+    scrollViewContent: {
+        paddingBottom: spacing.lg,
     },
     row: {
         flexDirection: 'row',
@@ -22,9 +25,14 @@ export const layout = StyleSheet.create({
     spaceBetween: {
         justifyContent: 'space-between',
     },
+    centeredContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
 });
 
-// Spacing
+/* -------------------------------- Spacing -------------------------------- */
 export const spacingStyles = StyleSheet.create({
     mb8: { marginBottom: spacing.sm },
     mb16: { marginBottom: spacing.md },
@@ -40,7 +48,7 @@ export const spacingStyles = StyleSheet.create({
     p16: { padding: spacing.md },
 });
 
-// Typography
+/* -------------------------------- Typography -------------------------------- */
 export const typography = StyleSheet.create({
     title: {
         ...theme.fonts.titleLarge,
@@ -62,16 +70,20 @@ export const typography = StyleSheet.create({
     },
 });
 
-// Form styles
+/* -------------------------------- Forms -------------------------------- */
 export const forms = StyleSheet.create({
     input: {
         backgroundColor: colors.surfaceVariant,
         borderRadius: 4,
-        paddingVertical: 8,  // Reduced from default
+        paddingVertical: 8,
         paddingHorizontal: 12,
         fontSize: 14,
-        minHeight: 42,  // Fixed height for consistency
+        minHeight: 42,
         color: colors.onSurface,
+        marginBottom: 16,
+    },
+    textArea: {
+        minHeight: 100,
     },
     label: {
         ...theme.fonts.labelMedium,
@@ -83,7 +95,7 @@ export const forms = StyleSheet.create({
         textAlignVertical: 'top',
     },
     inputContainer: {
-        marginBottom: 12
+        marginBottom: 12,
     },
     row: {
         flexDirection: 'row',
@@ -99,26 +111,41 @@ export const forms = StyleSheet.create({
         backgroundColor: colors.surfaceVariant,
         borderRadius: 6,
         paddingHorizontal: 10,
-        minHeight: 42,   // consistent compact height
-    }
+        minHeight: 42,
+    },
 });
 
-// Cards
+/* -------------------------------- Cards -------------------------------- */
 export const cards = StyleSheet.create({
     card: {
         backgroundColor: colors.surface,
         borderRadius: 12,
         padding: spacing.md,
         marginBottom: spacing.sm,
-        elevation: 1,
+        elevation: 2,
         shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.2,
         shadowRadius: 1.41,
     },
+    cardTitle: {
+        fontWeight: '600',
+    },
+    cardContent: {
+        paddingHorizontal: 16,
+        paddingTop: 8,
+    },
+    cardActions: {
+        padding: 16,
+        justifyContent: 'flex-end',
+    },
+    headerActions: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
 });
 
-// Buttons
+/* -------------------------------- Buttons -------------------------------- */
 export const buttons = StyleSheet.create({
     primary: {
         backgroundColor: colors.primary,
@@ -148,9 +175,22 @@ export const buttons = StyleSheet.create({
         height: 42,
         justifyContent: 'center',
     },
+    content: {
+        height: 42,
+    },
+    label: {
+        fontSize: 14,
+    },
+    error: {
+        backgroundColor: colors.error,
+        borderColor: colors.error,
+    },
+    errorText: {
+        color: colors.onError,
+    }
 });
 
-// List styles
+/* -------------------------------- Lists -------------------------------- */
 export const lists = StyleSheet.create({
     item: {
         backgroundColor: colors.surface,
@@ -180,40 +220,77 @@ export const lists = StyleSheet.create({
     },
 });
 
+/* -------------------------------- Color Picker -------------------------------- */
+export const colorPicker = StyleSheet.create({
+    label: {
+        fontSize: 12,
+        marginBottom: 4,
+        color: 'rgba(0,0,0,0.54)',
+    },
+    pickerButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        padding: 8,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.23)',
+        borderRadius: 4,
+        backgroundColor: '#fff',
+    },
+    colorPreview: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        borderWidth: 1,
+        borderColor: 'rgba(0,0,0,0.23)',
+        marginRight: 12,
+    },
+    colorText: {
+        fontSize: 16,
+        color: '#333',
+    },
+    modalContainer: {
+        flex: 1,
+        justifyContent: 'center',
+        backgroundColor: 'rgba(0,0,0,0.5)',
+        padding: 20,
+    },
+    modalContent: {
+        backgroundColor: 'white',
+        borderRadius: 8,
+        padding: 20,
+        height: 420,
+    },
+});
 
-// In globalStyles.ts, add:
+/* -------------------------------- Elevation -------------------------------- */
 export const elevation = {
     small: {
         elevation: 2,
         shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 1 },
         shadowOpacity: 0.2,
-        shadowRadius: 1.41,
+        shadowRadius: 1.4,
     },
     medium: {
         elevation: 4,
         shadowColor: colors.shadow,
         shadowOffset: { width: 0, height: 2 },
         shadowOpacity: 0.25,
-        shadowRadius: 3.84,
+        shadowRadius: 3.8,
     },
-    // Add more as needed
 };
 
-// Responsive
+/* -------------------------------- Responsive -------------------------------- */
 const { width, height } = Dimensions.get('window');
 
 export const responsive = {
-    // Responsive width (percentage of screen width)
     wp: (percentage: number) => (width * percentage) / 100,
-    // Responsive height (percentage of screen height)
     hp: (percentage: number) => (height * percentage) / 100,
-    // Screen dimensions
     width,
     height,
 };
 
-// Export everything in a single object for easier imports
+/* -------------------------------- Global Export -------------------------------- */
 export const globalStyles = {
     layout,
     spacing: spacingStyles,
@@ -222,5 +299,8 @@ export const globalStyles = {
     cards,
     buttons,
     lists,
+    colorPicker,
+    elevation,
     responsive,
+    flex1: { flex: 1 },
 };

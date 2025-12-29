@@ -1,5 +1,5 @@
 
-export interface User {
+export interface SupabaseUser {
     id: string;
     first_name: string;
     last_name: string;
@@ -28,5 +28,20 @@ export interface User {
     is_anonymous?: boolean
     is_sso_user?: boolean
     // factors?: (Factor<FactorType, 'verified'> | Factor<FactorType, 'unverified'>)[]
+    deleted_at?: string
+}
+
+export interface AppUser {
+    id: string;
+    first_name: string;
+    last_name: string;
+    full_name: string;
+    email?: string
+    created_at: string
+    confirmed_at?: string
+    email_confirmed_at?: string
+    last_sign_in_at?: string
+    role?: string
+    updated_at?: string
     deleted_at?: string
 }

@@ -26,7 +26,7 @@ export default function HomeScreen({ navigation }: Props) {
             .from('folders')
             .select('*')
             .order('created_at', { ascending: false });
-        if (error) console.log('Error fetching groups:', error.message);
+        if (error) console.log('Error fetching folders:', error.message);
         else setExpenseGroups(data || []);
         setLoadingGroups(false);
     };
@@ -63,21 +63,21 @@ export default function HomeScreen({ navigation }: Props) {
 
             {/* Expense Groups */}
             <Text variant="titleMedium" style={{ marginBottom: 8, color: theme.colors.onBackground }}>
-                Expense Groups
+                Expense Folders
             </Text>
             {loadingGroups ? (
                 <ActivityIndicator color={theme.colors.primary} size="small" />
             ) : (
                 <FlatList
                     data={expenseGroups}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item) => item?.id?.toString() ?? ''}
                     horizontal
                     showsHorizontalScrollIndicator={false}
                     contentContainerStyle={{ paddingBottom: 12 }}
                     renderItem={({ item }) => (
                         <Card
                             style={[styles.groupCard, { backgroundColor: theme.colors.surface }]}
-                            onPress={() => navigation.navigate('GroupDetail', { groupId: item.id })}
+                            onPress={() => navigation.navigate('GroupDetail', { groupId: parseInt( item?.id?? '0') ?? 0 })}
                         >
                             <Card.Content>
                                 <Text variant="titleSmall" style={{ fontWeight: 'bold', color: theme.colors.onSurface }}>
@@ -105,7 +105,7 @@ export default function HomeScreen({ navigation }: Props) {
             ) : (
                 <FlatList
                     data={expenses}
-                    keyExtractor={(item) => item.id.toString()}
+                    keyExtractor={(item) => item?.id?.toString() ?? ""}
                     renderItem={({ item }) => (
                         <Card style={[styles.expenseCard, { backgroundColor: theme.colors.surface }]}>
                             <Card.Content>

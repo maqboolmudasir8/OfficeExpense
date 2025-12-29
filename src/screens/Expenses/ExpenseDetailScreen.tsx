@@ -66,7 +66,7 @@ export default function ExpenseDetailScreen({ route, navigation }: Props) {
             <Button
                 mode="text"
                 onPress={() =>
-                    navigation.navigate("EditExpense", { expenseId: expense.id })
+                    navigation.navigate("EditExpense", { expenseId: expense?.id, fileId: expense.file_id })
                 }
                 style={styles.actionBtn}
             >

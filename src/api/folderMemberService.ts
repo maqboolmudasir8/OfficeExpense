@@ -22,7 +22,7 @@ export const folderMemberService = {
         }));
     },
 
-    addMember: async (folderId: number, email: string, permission: PermissionLevel): Promise<FolderMember> => {
+    addMember: async (folderId: number, email: string, permission: PermissionLevel, creatorId: string): Promise<FolderMember> => {
         // First get user by email
         const { data: userData, error: userError } = await supabase
             .from('users')
@@ -34,8 +34,8 @@ export const folderMemberService = {
             throw new Error('User not found');
         }
 
-        // Check if user is already a member
-        const { data: existingMember, error: checkError } = await supabase
+        // Check if already a member
+        const { data: existingMember } = await supabase
             .from('folder_members')
             .select('*')
             .eq('folder_id', folderId)
@@ -46,24 +46,25 @@ export const folderMemberService = {
             throw new Error('User is already a member of this folder');
         }
 
-        // Add user as member
+        // Add member
         const { data, error } = await supabase
             .from('folder_members')
             .insert({
                 folder_id: folderId,
                 user_id: userData.id,
-                permission_level: permission,
-                assigned_by: (await supabase.auth.getUser()).data.user?.id
+                permission_level: permission.toString(),
+                assigned_by: creatorId, // NOT NULL
+                created_by: creatorId,  // NOT NULL
             })
-            .select('*, user:user_id (id, email, full_name)')
+            .select('*')
             .single();
 
         if (error) throw error;
 
         return {
             ...data,
-            user_email: data.user?.email,
-            user_name: data.user?.full_name || data.user?.email?.split('@')[0],
+            user_email: userData.email,
+            user_name: userData.full_name || userData.email.split('@')[0],
         };
     },
 

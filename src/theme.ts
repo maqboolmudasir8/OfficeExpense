@@ -63,7 +63,7 @@ export const colors = {
     onSurfaceVariant: '#49454F',
 
     outline: '#79747E',
-    outlineVariant: '#CAC4D0',
+    // outlineVariant: '#CAC4D0',
 
     shadow: '#000000',
     scrim: '#000000',
@@ -81,8 +81,9 @@ export const colors = {
         level5: '#E9E3F0',
     },
 
-    surfaceDisabled: '#1C1B1F',
-    onSurfaceDisabled: '#1C1B1F',
+    surfaceDisabled: '#f1f1f1', // Example color
+    onSurfaceDisabled: '#888888', // Example color
+    outlineVariant: '#e0e0e0', // Example color
 
     backdrop: 'rgba(50, 47, 55, 0.4)',
 };

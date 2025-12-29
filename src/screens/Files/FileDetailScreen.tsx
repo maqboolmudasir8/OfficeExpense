@@ -196,7 +196,7 @@ export default function FileDetailScreen() {
 
     return (
         <View style={[styles.container, { backgroundColor: theme.colors.background }]}>
-            <View style={styles.header}>
+            {/*<View style={styles.header}>
                 <IconButton
                     icon="arrow-left"
                     onPress={() => navigation.goBack()}
@@ -211,7 +211,7 @@ export default function FileDetailScreen() {
                 <Text style={styles.headerTitle} numberOfLines={1}>
                     {file?.title || 'File Details'}
                 </Text>
-                {/* <Menu
+                 <Menu
                     visible={isMenuVisible}
                     onDismiss={() => setIsMenuVisible(false)}
                     anchor={
@@ -240,8 +240,8 @@ export default function FileDetailScreen() {
                         leadingIcon="delete"
                         titleStyle={{ color: theme.colors.error }}
                     />
-                </Menu> */}
-            </View>
+                </Menu> 
+            </View>*/}
 
             {isLoading ? (
                 <View style={styles.loadingContainer}>

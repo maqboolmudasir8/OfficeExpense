@@ -1,8 +1,9 @@
 import React from "react";
 import { FlatList, View, StyleSheet } from "react-native";
-import { Text } from "react-native-paper";
+import { Text, useTheme } from "react-native-paper";
 import { File } from "../../../types/File";
 import { FileCard } from "./FileCard";
+import { globalStyles } from "../../../styles/globalStyles";
 
 interface FileListProps {
     files: File[];
@@ -13,23 +14,26 @@ interface FileListProps {
 }
 
 export const FileList: React.FC<FileListProps> = ({ files, onOpen, onMenu, isRefreshing, onRefresh }) => {
+    const theme = useTheme();
     return (
         <FlatList
             data={files}
             keyExtractor={(item) => item?.id?.toString() ?? "0"}
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            contentContainerStyle={styles.container}
+            contentContainerStyle={[styles.container]}
             ListEmptyComponent={
-                <View style={styles.empty}>
-                    <Text variant="titleMedium">No files found</Text>
+                <View style={[styles.empty, { justifyContent: 'center', alignItems: 'center' }]}>
+                    <Text variant="titleMedium" style={{ color: theme.colors.onSurfaceVariant }}>
+                        No files found
+                    </Text>
                 </View>
             }
             renderItem={({ item }) => (
                 <FileCard
                     file={item}
                     onPress={() => onOpen(item)}
-                    onLongPress={() => onMenu(item)}
+                    onMenuPress={() => onMenu(item)}
                 />
             )}
         />
@@ -37,6 +41,11 @@ export const FileList: React.FC<FileListProps> = ({ files, onOpen, onMenu, isRef
 };
 
 const styles = StyleSheet.create({
-    container: { paddingBottom: 20 },
-    empty: { padding: 30, alignItems: "center" },
+    container: {
+        padding: 16,
+    },
+    empty: {
+        flex: 1,
+        padding: 30,
+    },
 });

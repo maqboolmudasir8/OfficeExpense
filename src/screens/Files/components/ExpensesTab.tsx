@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, FlatList, ActivityIndicator, Alert, RefreshControl } from 'react-native';
-import { Text, Button, Card, Menu, Dialog, Portal, Avatar, Searchbar, useTheme, IconButton, FAB } from 'react-native-paper';
+import { View, StyleSheet, FlatList, ActivityIndicator, Alert, RefreshControl, TouchableOpacity } from 'react-native';
+import { Text, Button, Menu, Portal, Searchbar, useTheme, FAB, Icon } from 'react-native-paper';
 import { format } from 'date-fns';
 import { fetchExpensesByFileId, deleteExpense, fetchFilteredExpenses } from '../../../api/expenseService';
 import { useNavigation } from '@react-navigation/native';
@@ -90,80 +90,64 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
         }
     };
 
-    // Filter expenses based on search query
-    // const filteredExpenses = expenses.filter(expense => {
-    //     const searchLower = searchQuery.toLowerCase();
-    //     return (
-    //         (expense.notes?.toLowerCase().includes(searchLower) || '') ||
-    //         (expense.category?.toLowerCase().includes(searchLower) || '')
-    //     );
-    // });
+    // Get category icon based on category name
+    const getCategoryIcon = (category: string) => {
+        const icons: { [key: string]: string } = {
+            'food': 'food',
+            'transport': 'car',
+            'accommodation': 'home',
+            'utilities': 'lightbulb',
+            'shopping': 'shopping',
+            'entertainment': 'ticket',
+            'health': 'medical-bag',
+            'education': 'school',
+            'other': 'dots-horizontal'
+        };
 
-    // Render expense item
+        const icon = Object.keys(icons).find(key =>
+            category.toLowerCase().includes(key)
+        );
+
+        return icon ? icons[icon] : 'receipt';
+    };
+
+    // Render expense item as a transaction row
     const renderExpenseItem = ({ item }: { item: Expense }) => {
-        const userName = 'You'; // Replace with actual user name if available
-        const userInitials = userName
-            .split(' ')
-            .map(n => n[0])
-            .join('')
-            .toUpperCase()
-            .substring(0, 2);
+        const categoryIcon = getCategoryIcon(item.category || 'other');
+        const isNegative = item.amount < 0;
+        const amountColor = isNegative ? '#e74c3c' : '#2ecc71';
+        const formattedDate = format(new Date(item.spent_at), 'MMM d');
 
         return (
-            <Card style={styles.expenseCard}>
-                <Card.Content>
-                    <View style={styles.expenseHeader}>
-                        <View style={styles.expenseAmount}>
-                            <Text style={styles.amountText}>${item.amount.toFixed(2)}</Text>
-                            <Text style={styles.categoryText}>{item.category}</Text>
-                        </View>
-                        <View style={styles.expenseUser}>
-                            <Avatar.Text size={32} label={userInitials} style={styles.avatar} />
-                            <Text style={styles.userName}>{userName}</Text>
-                        </View>
-                    </View>
-                    {item.notes && <Text style={styles.descriptionText}>{item.notes}</Text>}
-                    <View style={styles.expenseFooter}>
-                        <Text style={styles.dateText}>
-                            {format(new Date(item.spent_at), 'MMM d, yyyy')}
-                        </Text>
-                        <Menu
-                            visible={menuForId === item.id}
-                            onDismiss={() => setMenuForId(null)}
-                            anchor={
-                                <IconButton
-                                    icon="dots-vertical"
-                                    onPress={() => {
-                                        setMenuForId(item?.id ?? 0);
-                                    }}
-                                    style={styles.menuButton}
-                                />
-                            }
-                        >
-
-                            <Menu.Item
-                                onPress={() => {
-                                    setMenuForId(null);
-                                    navigation.navigate('EditExpense', {
-                                        expenseId: item?.id ?? 0,
-                                        fileId: fileId ?? 0
-                                    });
-                                }}
-                                title="Edit"
-                            />
-                            <Menu.Item
-                                onPress={() => {
-                                    setMenuForId(null);
-                                    setSelectedExpense(item);
-                                    setIsDeleteDialogVisible(true);
-                                }}
-                                title="Delete"
-                                titleStyle={{ color: theme.colors.error }}
-                            />
-                        </Menu>
-                    </View>
-                </Card.Content>
-            </Card>
+            <TouchableOpacity
+                style={styles.transactionRow}
+                onPress={() => {
+                    navigation.navigate('EditExpense', {
+                        expenseId: item?.id ?? 0,
+                        fileId: fileId ?? 0
+                    });
+                }}
+            >
+                <View style={styles.transactionIcon}>
+                    <Icon source={categoryIcon} size={20} color="#666" />
+                </View>
+                <View style={styles.transactionDetails}>
+                    <Text style={styles.transactionTitle} numberOfLines={1}>
+                        {item.expense_title || item.category || 'Expense'}
+                    </Text>
+                    <Text style={styles.transactionCategory}>
+                        {item.category || 'Uncategorized'}
+                    </Text>
+                </View>
+                <View>
+                    <Text style={[styles.transactionAmount, { color: amountColor }]}>
+                        {isNegative ? '-' : ''}{item.currency} {Math.abs(item.amount).toFixed(2)}
+                    </Text>
+                    <Text style={styles.transactionDate}>
+                        {formattedDate}
+                    </Text>
+                </View>
+            </TouchableOpacity>
         );
     };
 
@@ -185,85 +169,86 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
 
     return (
         <View style={styles.container}>
-            {/* Search Bar */}
-            <Searchbar
-                placeholder="Search expenses..."
-                onChangeText={setSearchQuery}
-                value={searchQuery}
-                style={styles.searchBar}
-                iconColor={theme.colors.primary}
-                placeholderTextColor={theme.colors.onSurfaceVariant}
-            />
+            <View style={styles.contentContainer}>
+                <Searchbar
+                    placeholder="Search expenses..."
+                    onChangeText={setSearchQuery}
+                    value={searchQuery}
+                    style={styles.searchBar}
+                    iconColor="#666"
+                    placeholderTextColor="#999"
+                    inputStyle={{ fontSize: 14 }}
+                />
 
-            <Button
-                mode="outlined"
-                icon="filter"
-                onPress={() => setFilterVisible(true)}
-                style={{ marginVertical: 8 }}
-            >
-                Filters
-            </Button>
+                <Button
+                    mode="outlined"
+                    icon="filter"
+                    onPress={() => setFilterVisible(true)}
+                    style={styles.filterButton}
+                    labelStyle={styles.filterButtonText}
+                    contentStyle={{ height: 36 }}
+                >
+                    Filter Expenses
+                </Button>
 
+                {/* Expenses List */}
+                <FlatList
+                    data={expenses}
+                    renderItem={renderExpenseItem}
+                    keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+                    contentContainerStyle={styles.listContent}
+                    ListEmptyComponent={renderEmptyState}
+                    refreshControl={
+                        <RefreshControl
+                            refreshing={isRefreshing}
+                            onRefresh={handleRefresh}
+                            colors={[theme.colors.primary]}
+                            tintColor={theme.colors.primary}
+                        />
+                    }
+                    ItemSeparatorComponent={() => <View style={styles.separator} />}
+                />
 
-            {/* Expenses List */}
-            <FlatList
-                data={expenses}
-                renderItem={({ item }) => (
-                    <ExpenseCard
-                        expense={item}
-                        onEdit={(expenseId) => navigation.navigate('EditExpense', { expenseId, fileId })}
-                        onDelete={(expense) => {
-                            setSelectedExpense(expense);
-                            setIsDeleteDialogVisible(true);
+                {/* Add Expense Button */}
+                {fileId && fileId > 0 ? (
+                    <FAB
+                        icon="plus"
+                        style={{
+                            position: 'absolute',
+                            margin: 16,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: theme.colors.primary,
+                        }}
+                        color="white"
+                        onPress={() => {
+                            navigation.navigate('AddExpense', { fileId, folderId });
                         }}
                     />
-                )}
-                keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
-                contentContainerStyle={styles.listContent}
-                ListEmptyComponent={renderEmptyState}
-                refreshControl={
-                    <RefreshControl
-                        refreshing={isRefreshing}
-                        onRefresh={handleRefresh}
-                        colors={[theme.colors.primary]}
-                        tintColor={theme.colors.primary}
-                    />
-                }
-                ItemSeparatorComponent={() => <View style={styles.separator} />}
-            />
+                ) : null}
 
-            {/* Add Expense Button */}
-            {fileId && fileId > 0 && (
-                <FAB
-                    icon="plus"
-                    style={{ position: "absolute", right: 16, bottom: 16 }}
-                    onPress={() => {
-                        navigation.navigate('AddExpense', { fileId, folderId });
-                    }}
+                <ExpensesFilterBottomSheet
+                    visible={filterVisible}
+                    onClose={() => setFilterVisible(false)}
+                    onApplyFilters={(f) => setFilters(f)}
                 />
-            )}
 
-            <ExpensesFilterBottomSheet
-                visible={filterVisible}
-                onClose={() => setFilterVisible(false)}
-                onApplyFilters={(f) => setFilters(f)}
-            />
+                {/* Delete Confirmation Dialog */}
+                <ConfirmationDialog
+                    visible={isDeleteDialogVisible}
+                    onCancel={() => setIsDeleteDialogVisible(false)}
+                    onConfirm={handleDeleteExpense}
 
-            {/* Delete Confirmation Dialog */}
-            <ConfirmationDialog
-                visible={isDeleteDialogVisible}
-                onCancel={() => setIsDeleteDialogVisible(false)}
-                onConfirm={handleDeleteExpense}
-
-                loading={isLoading}
-                danger={true}
-                icon="trash-can"
-                title="Delete Expense"
-                message="Are you sure you want to delete this expense?"
-                confirmLabel="Delete"
-                cancelLabel="Cancel"
-                confirmColor={theme.colors.error}
-            />
+                    loading={isLoading}
+                    danger={true}
+                    icon="trash-can"
+                    title="Delete Expense"
+                    message="Are you sure you want to delete this expense?"
+                    confirmLabel="Delete"
+                    cancelLabel="Cancel"
+                    confirmColor={theme.colors.error}
+                />
+            </View>
         </View>
     );
 };
@@ -271,104 +256,98 @@ export const ExpensesTab: React.FC<ExpensesTabProps> = ({ fileId, folderId }) =>
 const styles = StyleSheet.create({
     container: {
         flex: 1,
-        padding: 16,
+        backgroundColor: '#fff',
+    },
+    contentContainer: {
+        padding: 12,
     },
     loadingContainer: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#fff',
     },
     searchBar: {
-        marginBottom: 16,
+        margin: 12,
+        marginBottom: 8,
         elevation: 0,
-        backgroundColor: 'transparent',
+        backgroundColor: '#f5f5f5',
+        borderRadius: 8,
     },
     listContent: {
-        flexGrow: 1,
-        paddingBottom: 100,
+        paddingBottom: 80,
     },
-    expenseCard: {
-        marginBottom: 8,
-        elevation: 1,
-    },
-    expenseHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        marginBottom: 8,
-    },
-    expenseAmount: {
-        flex: 1,
-    },
-    amountText: {
-        fontSize: 18,
-        fontWeight: 'bold',
-    },
-    categoryText: {
-        fontSize: 14,
-        color: '#666',
-        marginTop: 2,
-    },
-    expenseUser: {
+    transactionRow: {
         flexDirection: 'row',
         alignItems: 'center',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderBottomWidth: 1,
+        borderBottomColor: '#f0f0f0',
     },
-    avatar: {
-        marginRight: 8,
-        backgroundColor: '#6200ee',
-    },
-    userName: {
-        fontSize: 14,
-        color: '#333',
-    },
-    descriptionText: {
-        fontSize: 14,
-        color: '#333',
-        marginBottom: 8,
-    },
-    expenseFooter: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
-    },
-    dateText: {
-        fontSize: 12,
-        color: '#666',
-    },
-    menuButton: {
-        width: 40,
-        height: 40,
+    transactionIcon: {
+        width: 36,
+        height: 36,
+        borderRadius: 18,
+        backgroundColor: '#f0f0f0',
         justifyContent: 'center',
         alignItems: 'center',
+        marginRight: 12,
+    },
+    transactionDetails: {
+        flex: 1,
+    },
+    transactionTitle: {
+        fontSize: 15,
+        fontWeight: '500',
+        color: '#333',
+        marginBottom: 2,
+    },
+    transactionCategory: {
+        fontSize: 12,
+        color: '#888',
+    },
+    transactionAmount: {
+        fontSize: 15,
+        fontWeight: '500',
+        textAlign: 'right',
+    },
+    transactionDate: {
+        fontSize: 11,
+        color: '#999',
+        textAlign: 'right',
+        marginTop: 2,
     },
     emptyState: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
         padding: 40,
+        backgroundColor: '#fff',
     },
     emptyStateText: {
         fontSize: 16,
-        fontWeight: 'bold',
+        fontWeight: '500',
+        color: '#666',
         marginBottom: 8,
+        textAlign: 'center',
     },
     emptyStateSubtext: {
         fontSize: 14,
-        color: '#666',
+        color: '#999',
         textAlign: 'center',
     },
-    addButton: {
-        position: 'absolute',
-        margin: 16,
-        right: 0,
-        bottom: 0,
-        borderRadius: 28,
-        paddingHorizontal: 8,
+    filterButton: {
+        marginHorizontal: 12,
+        marginBottom: 8,
+        borderRadius: 8,
+        borderColor: '#e0e0e0',
     },
-    addButtonLabel: {
-        fontSize: 16,
-        paddingVertical: 6,
+    filterButtonText: {
+        fontSize: 13,
     },
     separator: {
-        height: 8,
+        height: 1,
+        backgroundColor: '#f0f0f0',
     },
 });

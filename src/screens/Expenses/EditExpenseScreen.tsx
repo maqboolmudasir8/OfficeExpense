@@ -4,9 +4,9 @@ import { NativeStackScreenProps } from "@react-navigation/native-stack";
 import { RootStackParamList } from "../../types/RootStackParamList";
 
 import { TextInput } from "../../components/TextInput";
-import Button from "../../components/Button";
-import Dropdown from "../../components/Dropdown";
-import Text from "../../components/Text";
+import { Button } from "../../components/Button";
+import { Dropdown } from "../../components/Dropdown";
+import { Text } from "../../components/Text";
 import DateTimeSelector from "../../components/Expenses/DateTimeSelector";
 
 import { EXPENSE_CATEGORIES } from "../../constants/expenseOptions";
@@ -203,7 +203,7 @@ export default function EditExpenseScreen({ route, navigation }: Props) {
 
             <TextInput
                 label="Title"
-                value={expense.expense_title}
+                value={expense?.expense_title ?? ''}
                 onChangeText={(v) => updateField("expense_title", v)}
                 style={styles.input}
             />

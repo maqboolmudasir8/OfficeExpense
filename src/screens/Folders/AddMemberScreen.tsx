@@ -4,7 +4,7 @@ import { TextInput, Button, Snackbar, Text } from "react-native-paper";
 import { Picker } from "@react-native-picker/picker";
 import { useRoute, RouteProp } from "@react-navigation/native";
 import { RootStackParamList } from "../../types/RootStackParamList";
-import { useGroupStore } from "../../store/groupStore";
+import { useFolderStore } from "../../store/folderStore";
 import { useNavigation } from "@react-navigation/native";
 import { PermissionLevel } from "../../types/Folder";
 
@@ -18,7 +18,7 @@ export default function AddMemberScreen() {
     const [permissionLevel, setPermissionLevel] = useState<PermissionLevel>("Viewer");
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
-    const addMember = useGroupStore((state) => state.addMember);
+    const addMember = useFolderStore((state) => state.addMember);
 
     const permissionLevels: PermissionLevel[] = ["Viewer", "Contributor", "Editor"];
 

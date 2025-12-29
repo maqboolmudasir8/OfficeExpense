@@ -1,7 +1,7 @@
 // src/screens/ExpenseGroups/AddGroupScreen.tsx
 import React, { useState } from 'react';
 import { View, TextInput, Button, Alert, StyleSheet } from 'react-native';
-import { createGroup } from '../../api/folderService';
+import { createFolder } from '../../api/folderService';
 import { RootStackParamList } from '../../types/RootStackParamList';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 
@@ -16,7 +16,7 @@ export default function AddGroupScreen({ navigation }: Props) {
         if (!name) return Alert.alert('Error', 'Group name is required');
         setLoading(true);
         try {
-            await createGroup(name, description || null);
+            await createFolder(name, description || null);
             Alert.alert('Success', 'Group created successfully');
             navigation.goBack();
         } catch (error: any) {
@@ -40,7 +40,7 @@ export default function AddGroupScreen({ navigation }: Props) {
                 onChangeText={setDescription}
                 style={styles.input}
             />
-            <Button title={loading ? 'Creating...' : 'Create Group'} onPress={handleAddGroup} disabled={loading} />
+            <Button title={loading ? 'Creating...' : 'Create Group AddGroupScreen'} onPress={handleAddGroup} disabled={loading} />
         </View>
     );
 }

@@ -2,12 +2,24 @@
 
 import { User } from "@supabase/supabase-js";
 
-export type FolderVisibility = "Private" | "Public";
-export type FolderStatus = "Active" | "Archived";
-export type PermissionLevel = "Viewer" | "Contributor" | "Editor";
+export enum FolderVisibility {
+    Private = "Private",
+    Public = "Public"
+};
+
+export enum FolderStatus {
+    Active = "Active",
+    Archived = "Archived"
+}
+
+export enum PermissionLevel {
+    Viewer = "Viewer",
+    Contributor = "Contributor",
+    Editor = "Editor",
+}
 
 export interface Folder {
-    id: number;
+    id?: string;
     title: string;
     description?: string | null;
     visibility: FolderVisibility;
@@ -34,4 +46,16 @@ export interface FolderMember {
     updated_at?: string;
     updated_by?: string;
     user?: User;
+}
+
+export interface EditableFolderInputModel {
+    id?: string;
+    title: string;
+    description?: string | null;
+    visibility?: string;
+    color_code?: string | null;
+    icon?: string | null;
+    status: string;
+    created_at?: string;
+    created_by?: string;
 }

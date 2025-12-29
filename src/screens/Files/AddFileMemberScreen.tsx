@@ -16,7 +16,7 @@ import { RouteProp, useRoute, useNavigation } from '@react-navigation/native';
 // import { StackNavigationProp } from '@react-navigation/stack';
 import { fileService } from '../../api/fileService';
 import { PermissionLevel } from '../../types/Folder';
-import { User } from '../../types/User';
+import { SupabaseUser } from '../../types/User';
 import { supabase } from '../../api/supabaseClient';
 import { useAppNavigation } from '../../hooks/useAppNavigation';
 import { AuthContext } from '../../context/AuthContext';
@@ -38,8 +38,8 @@ export default function AddFileMemberScreen() {
     const route = useRoute<RouteProp<{ params: AddFileMemberRouteParams }, 'params'>>();
     const { user } = useContext(AuthContext);
     const [email, setEmail] = useState('');
-    const [permission, setPermission] = useState<PermissionLevel>('Viewer');
-    const [searchResults, setSearchResults] = useState<User[]>([]);
+    const [permission, setPermission] = useState<PermissionLevel>(PermissionLevel.Viewer);
+    const [searchResults, setSearchResults] = useState<SupabaseUser[]>([]);
     const [isSearching, setIsSearching] = useState(false);
     const [isAdding, setIsAdding] = useState(false);
 

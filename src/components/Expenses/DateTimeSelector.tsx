@@ -3,7 +3,8 @@ import React, { useState } from "react";
 import { View, Platform, StyleProp, ViewStyle } from "react-native";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { Button } from "../Button";
-import Text from "../Text";
+import { globalStyles } from "../../styles/globalStyles";
+import { Text } from "../Text";
 
 interface DateTimeSelectorProps {
     value: Date;
@@ -47,8 +48,12 @@ export default function DateTimeSelector({ value, style, onChange }: DateTimeSel
 
     return (
         <View>
-            <Button label="Select Date & Time" mode="outlined" onPress={() => setShowDatePicker(true)} />
-            {/* <Text>Selected: {value.toLocaleString()}</Text> */}
+            <Button
+                label="Select Date & Time"
+                mode="outlined" onPress={() => setShowDatePicker(true)}
+                style={globalStyles.buttons.secondary}
+            />
+            <Text>Selected: {value.toLocaleString()}</Text>
 
             {showDatePicker && (
                 <DateTimePicker
